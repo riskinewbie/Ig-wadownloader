@@ -1,0 +1,3363 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IG Downriss</title>
+    <style>
+        /* ===== VARIABEL & RESET ===== */
+        :root {
+            --bg: #15131a;
+            --panel: #1e1c25;
+            --accent: #ff5d73;
+            --accent-dim: #ff5d7333;
+            --text: #f2f0f5;
+            --muted: #948fa3;
+            --border: #2c2934;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --radius: 14px;
+            --glow: none;
+            --ease: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --sound-enabled: 1;
+        }
+
+        html[data-theme="hacker"] {
+            --bg: #050705;
+            --panel: #0a120a;
+            --accent: #00ff6a;
+            --accent-dim: #00ff6a22;
+            --text: #c6ffd2;
+            --muted: #3f8a52;
+            --border: #124023;
+            --font-mono: "Courier New", Consolas, monospace;
+            --radius: 2px;
+            --glow: 0 0 6px currentColor;
+            --shadow-card: 0 0 20px rgba(0, 255, 106, 0.08);
+        }
+
+        /* ===== MODE GAME (EASTER EGG) ===== */
+        html[data-game="on"] {
+            --bg: #000000;
+            --panel: #0a0f0a;
+            --accent: #00ff41;
+            --accent-dim: #00ff4122;
+            --text: #00ff41;
+            --muted: #00cc33;
+            --border: #003d1a;
+            --font-mono: "Courier New", Consolas, monospace;
+            --glow: 0 0 8px #00ff41;
+            --radius: 0px;
+        }
+
+        html[data-game="on"] body {
+            font-family: "Courier New", Consolas, monospace;
+            background: #000000;
+            animation: matrixRain 0.5s steps(1) infinite;
+        }
+
+        html[data-game="on"] body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 65, 0.03) 2px,
+                    rgba(0, 255, 65, 0.03) 4px);
+            pointer-events: none;
+            z-index: 9998;
+            animation: scanline 0.1s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% {
+                transform: translateY(0);
+            }
+            100% {
+                transform: translateY(4px);
+            }
+        }
+
+        @keyframes matrixRain {
+            0% {
+                text-shadow: 0 0 2px #00ff41, 0 0 4px #00ff41;
+            }
+            50% {
+                text-shadow: 0 0 4px #00ff41, 0 0 8px #00ff41, 0 0 12px #00ff41;
+            }
+            100% {
+                text-shadow: 0 0 2px #00ff41, 0 0 4px #00ff41;
+            }
+        }
+
+        html[data-game="on"] .brand .dot {
+            border-radius: 0;
+            animation: glitchDot 0.3s steps(2) infinite;
+        }
+
+        @keyframes glitchDot {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(-2px, 1px) scale(1.2);
+            }
+            50% {
+                transform: translate(2px, -1px) scale(0.8);
+            }
+            75% {
+                transform: translate(-1px, 2px) scale(1.1);
+            }
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+        }
+
+        html[data-game="on"] .toast {
+            border: 1px solid #00ff41;
+            box-shadow: 0 0 20px #00ff41, inset 0 0 20px #00ff4122;
+            border-radius: 0;
+            background: #000a00;
+            color: #00ff41;
+        }
+
+        .game-badge {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: 900;
+            color: #00ff41;
+            text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff41, 0 0 80px #00ff41;
+            z-index: 9999;
+            animation: glitchText 0.5s steps(2) infinite;
+            pointer-events: none;
+            font-family: "Courier New", monospace;
+        }
+
+        .game-badge.show {
+            display: block;
+        }
+
+        @keyframes glitchText {
+            0% {
+                transform: translate(-50%, -50%) skew(0deg);
+            }
+            25% {
+                transform: translate(-50%, -50%) skew(2deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) skew(-2deg);
+            }
+            75% {
+                transform: translate(-50%, -50%) skew(1deg);
+            }
+            100% {
+                transform: translate(-50%, -50%) skew(0deg);
+            }
+        }
+
+        /* ===== LIGHTBOX ===== */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .lightbox-overlay.open {
+            display: flex;
+            animation: fadeIn 0.3s var(--ease-out) both;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .lightbox-overlay .lightbox-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+            cursor: default;
+            animation: zoomIn 0.35s var(--ease) both;
+        }
+
+        .lightbox-overlay .lightbox-content video {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.85);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .lightbox-overlay .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: 300;
+            cursor: pointer;
+            transition: transform 0.2s var(--ease);
+            z-index: 100000;
+            background: none;
+            border: none;
+            font-family: inherit;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-overlay .lightbox-close:hover {
+            transform: rotate(90deg) scale(1.1);
+        }
+
+        .lightbox-overlay .lightbox-counter {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            font-family: var(--font-main);
+        }
+
+        .lightbox-overlay .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            font-size: 36px;
+            padding: 12px 18px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: all 0.2s var(--ease-out);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .lightbox-overlay .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .lightbox-overlay .lightbox-nav.prev {
+            left: 20px;
+        }
+
+        .lightbox-overlay .lightbox-nav.next {
+            right: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .lightbox-overlay .lightbox-nav {
+                font-size: 24px;
+                padding: 8px 12px;
+            }
+            .lightbox-overlay .lightbox-nav.prev {
+                left: 8px;
+            }
+            .lightbox-overlay .lightbox-nav.next {
+                right: 8px;
+            }
+            .lightbox-overlay .lightbox-close {
+                font-size: 30px;
+                top: 12px;
+                right: 16px;
+            }
+            .lightbox-overlay .lightbox-counter {
+                font-size: 12px;
+                padding: 4px 12px;
+                bottom: 16px;
+            }
+        }
+
+        /* ===== VOLUME SLIDER ===== */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: 4px;
+        }
+
+        .volume-control input[type="range"] {
+            width: 60px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+            transition: background 0.3s var(--ease-out);
+        }
+
+        .volume-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            box-shadow: var(--glow);
+            transition: transform 0.2s var(--ease);
+        }
+
+        .volume-control input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .volume-control input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-control .vol-label {
+            font-size: 10px;
+            color: var(--muted);
+            min-width: 28px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        html[data-theme="hacker"] .volume-control input[type="range"] {
+            border-radius: 0;
+        }
+
+        html[data-theme="hacker"] .volume-control input[type="range"]::-webkit-slider-thumb {
+            border-radius: 0;
+        }
+
+        /* ===== TOGGLE SOUND & LANGUAGE ===== */
+        .navbar-extras {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 4px;
+            flex-wrap: wrap;
+        }
+
+        .navbar-extras button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+            transition: all 0.2s var(--ease-out);
+            line-height: 1;
+        }
+
+        .navbar-extras button:hover {
+            color: var(--text);
+            background: var(--accent-dim);
+        }
+
+        .navbar-extras .lang-btn {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .lang-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 6px 0;
+            min-width: 120px;
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .lang-dropdown.open {
+            display: block;
+            animation: fadeUp 0.2s var(--ease-out) both;
+        }
+
+        .lang-dropdown button {
+            display: block;
+            width: 100%;
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.2s;
+            font-family: inherit;
+        }
+
+        .lang-dropdown button:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .lang-dropdown button.active-lang {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        /* ===== SOUND TOGGLE INDICATOR ===== */
+        .sound-btn .sound-icon {
+            display: inline-block;
+            transition: transform 0.3s var(--ease);
+        }
+
+        .sound-btn:hover .sound-icon {
+            transform: scale(1.2);
+        }
+
+        /* ===== HISTORY EXTRA BUTTONS ===== */
+        .history-extra {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-extra button {
+            flex: 1;
+            padding: 6px 10px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out);
+            font-family: inherit;
+            min-width: 60px;
+        }
+
+        .history-extra button:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .history-extra button.import-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-extra button.import-btn input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .navbar-extras {
+                gap: 2px;
+            }
+            .navbar-extras button {
+                font-size: 14px;
+                padding: 4px 5px;
+            }
+            .lang-dropdown {
+                min-width: 100px;
+                right: -10px;
+            }
+            .game-badge {
+                font-size: 28px;
+            }
+            .history-extra button {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            .volume-control input[type="range"] {
+                width: 40px;
+            }
+            .volume-control .vol-label {
+                font-size: 9px;
+                min-width: 22px;
+            }
+        }
+
+        /* ===== REST CSS SAMA SEPERTI SEBELUMNYA ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out);
+        }
+
+        html[data-theme="hacker"] body {
+            font-family: var(--font-mono);
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 26px 26px;
+            background-attachment: fixed;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: background 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: -0.02em;
+            color: var(--text);
+            text-shadow: var(--glow);
+            transition: color 0.3s var(--ease-out);
+            cursor: default;
+        }
+
+        .brand .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: var(--glow);
+            transition: background 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out),
+                transform 0.4s var(--ease);
+        }
+
+        .brand .dot:hover {
+            transform: scale(1.3) rotate(90deg);
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        .burger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.2s var(--ease-out);
+        }
+
+        .burger:hover {
+            background: var(--accent-dim);
+        }
+
+        .burger span {
+            width: 20px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s var(--ease);
+            transform-origin: center;
+        }
+
+        .burger.open span:nth-child(1) {
+            transform: translateY(6px) rotate(45deg);
+        }
+        .burger.open span:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+        .burger.open span:nth-child(3) {
+            transform: translateY(-6px) rotate(-45deg);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+        }
+
+        .nav-menu button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 9px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: color 0.2s var(--ease-out), background 0.2s var(--ease-out),
+                transform 0.15s var(--ease);
+            position: relative;
+            white-space: nowrap;
+        }
+
+        .nav-menu button:hover {
+            color: var(--text);
+            background: var(--accent-dim);
+            transform: translateY(-1px);
+        }
+
+        .nav-menu button:active {
+            transform: scale(0.96);
+        }
+
+        .nav-menu button.active {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .nav-menu button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 2px;
+            background: var(--accent);
+            border-radius: 2px;
+            box-shadow: var(--glow);
+            animation: underlinePop 0.35s var(--ease);
+        }
+
+        @keyframes underlinePop {
+            0% {
+                width: 0;
+                opacity: 0;
+            }
+            100% {
+                width: 16px;
+                opacity: 1;
+            }
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 6px;
+            padding-left: 14px;
+            border-left: 1px solid var(--border);
+            transition: border-color 0.3s var(--ease-out);
+        }
+
+        .theme-label {
+            font-size: 11.5px;
+            color: var(--muted);
+            white-space: nowrap;
+            transition: color 0.3s var(--ease-out);
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+        }
+
+        .switch:hover {
+            box-shadow: 0 0 12px var(--accent-dim);
+        }
+
+        html[data-theme="hacker"] .switch {
+            background: #0a2010;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: var(--glow);
+            transition: transform 0.35s var(--ease), background 0.3s var(--ease-out),
+                border-radius 0.3s var(--ease-out);
+        }
+
+        html[data-theme="hacker"] .switch::after {
+            transform: translateX(20px);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 640px) {
+            .burger {
+                display: flex;
+            }
+            .nav-menu {
+                position: fixed;
+                top: 57px;
+                left: 0;
+                right: 0;
+                background: var(--panel);
+                border-bottom: 1px solid var(--border);
+                border-top: 1px solid var(--border);
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px 16px;
+                gap: 4px;
+                transform: translateY(-12px) scaleY(0.95);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+                transform-origin: top center;
+                z-index: 100;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+            .nav-menu.open {
+                transform: translateY(0) scaleY(1);
+                opacity: 1;
+                pointer-events: auto;
+            }
+            .nav-menu button {
+                text-align: left;
+                width: 100%;
+                padding: 12px 16px;
+                font-size: 15px;
+                border-radius: 6px;
+            }
+            .nav-menu button.active::after {
+                left: 16px;
+                transform: none;
+                bottom: 6px;
+            }
+            .theme-toggle {
+                border-left: none;
+                border-top: 1px solid var(--border);
+                margin-left: 0;
+                padding-left: 0;
+                padding-top: 12px;
+                margin-top: 8px;
+                justify-content: space-between;
+            }
+        }
+
+        .wrap {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 28px 16px 64px;
+            animation: fadeUp 0.5s var(--ease-out) both;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== WA STATUS PANEL (PLACEHOLDER) ===== */
+        .wa-panel {
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 28px 16px 64px;
+            animation: fadeUp 0.5s var(--ease-out) both;
+            position: relative;
+            z-index: 1;
+            display: none;
+        }
+
+        .wa-panel.show {
+            display: block;
+        }
+
+        .wa-panel .wa-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+        }
+
+        .wa-panel .wa-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .wa-panel h2 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .wa-panel p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .wa-panel .wa-soon-badge {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: var(--accent-dim);
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .wa-toolbar {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .wa-toolbar button {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 6px;
+            font-family: inherit;
+            transition: all 0.2s var(--ease-out);
+        }
+
+        .wa-toolbar button:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin: 0 0 4px;
+            text-shadow: var(--glow);
+            transition: text-shadow 0.3s var(--ease-out);
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0 0 26px;
+            line-height: 1.5;
+            transition: color 0.3s var(--ease-out);
+        }
+
+        .mode-pill {
+            display: inline-block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-dim);
+            border: 1px solid var(--accent-dim);
+            padding: 3px 9px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+            transition: all 0.3s var(--ease-out);
+            animation: pillPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pillPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 var(--accent-dim);
+            }
+            50% {
+                box-shadow: 0 0 12px 2px var(--accent-dim);
+            }
+        }
+
+        html[data-theme="hacker"] .mode-pill {
+            border-radius: 2px;
+            text-transform: uppercase;
+            animation: pillPulseHacker 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pillPulseHacker {
+            0%,
+            100% {
+                text-shadow: 0 0 2px var(--accent);
+            }
+            50% {
+                text-shadow: 0 0 12px var(--accent);
+            }
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out),
+                background 0.3s var(--ease-out), transform 0.3s var(--ease-out),
+                opacity 0.3s var(--ease-out);
+        }
+
+        html[data-theme="hacker"] input[type="text"] {
+            border-radius: 2px;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim), var(--glow);
+        }
+
+        input[type="text"]:hover {
+            border-color: var(--accent);
+        }
+
+        input[type="text"]:disabled {
+            opacity: 0.4;
+            transform: scale(0.97);
+            filter: blur(1px);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--muted);
+            transition: color 0.3s var(--ease-out);
+        }
+
+        button.primary {
+            background: var(--accent);
+            color: #1a1017;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease),
+                box-shadow 0.3s var(--ease-out), background 0.3s var(--ease-out),
+                width 0.3s var(--ease-out), padding 0.3s var(--ease-out);
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        html[data-theme="hacker"] button.primary {
+            border-radius: 2px;
+            color: #020402;
+            box-shadow: var(--glow);
+        }
+
+        button.primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s var(--ease-out);
+        }
+
+        button.primary:hover:not(:disabled)::before {
+            transform: translateX(100%);
+        }
+
+        button.primary:not(:disabled):hover {
+            opacity: 0.88;
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px var(--accent-dim);
+        }
+
+        button.primary:not(:disabled):active {
+            transform: scale(0.96);
+        }
+
+        button.primary:disabled {
+            opacity: 0.9;
+            cursor: default;
+            transform: scale(0.98);
+            background: var(--muted);
+            color: var(--bg);
+            box-shadow: none;
+        }
+
+        button.primary .btn-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #1a1017;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            flex-shrink: 0;
+        }
+
+        button.primary.loading .btn-spinner {
+            display: block;
+        }
+        button.primary.loading .btn-text {
+            opacity: 0.7;
+        }
+        button.primary.loading {
+            padding: 0 16px;
+            gap: 6px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            animation: btnPulse 1.2s ease-in-out infinite;
+        }
+
+        html[data-theme="hacker"] button.primary.loading {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        html[data-theme="hacker"] button.primary.loading .btn-spinner {
+            border-color: rgba(0, 255, 106, 0.3);
+            border-top-color: #00ff6a;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @keyframes btnPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 var(--accent-dim);
+            }
+            50% {
+                box-shadow: 0 0 20px 6px var(--accent-dim);
+            }
+        }
+
+        .hint {
+            font-size: 12.5px;
+            color: var(--muted);
+            margin-bottom: 28px;
+            transition: color 0.3s var(--ease-out);
+        }
+
+        .status {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 14px;
+            padding: 16px 0;
+        }
+        .status.show {
+            display: flex;
+            animation: fadeUp 0.3s var(--ease-out) both;
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            transition: border-color 0.3s var(--ease-out);
+        }
+
+        .error {
+            display: none;
+            background: #3a1620;
+            border: 1px solid #6b2534;
+            color: #ff9daa;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 16px;
+            animation: shake 0.4s var(--ease);
+            transition: background 0.3s var(--ease-out), border-color 0.3s var(--ease-out),
+                color 0.3s var(--ease-out);
+        }
+
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-6px);
+            }
+            40% {
+                transform: translateX(6px);
+            }
+            60% {
+                transform: translateX(-4px);
+            }
+            80% {
+                transform: translateX(4px);
+            }
+        }
+        html[data-theme="hacker"] .error {
+            background: #0c1c0c;
+            border-color: #1f5c2f;
+            color: #8dffa0;
+            border-radius: 2px;
+        }
+        .error.show {
+            display: block;
+        }
+
+        .results {
+            margin-top: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 60px;
+            transition: min-height 0.3s var(--ease-out);
+        }
+        .results.loading .skeleton-card {
+            display: block;
+            animation: skeletonPulse 1.5s ease-in-out infinite;
+        }
+        .skeleton-card {
+            display: none;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            padding: 0;
+            box-shadow: var(--shadow-card);
+            transition: border-color 0.3s var(--ease-out);
+        }
+        html[data-theme="hacker"] .skeleton-card {
+            border-radius: 2px;
+        }
+        .skeleton-card .skeleton-img {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(90deg, var(--bg) 25%, var(--panel) 50%, var(--bg) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.8s ease-in-out infinite;
+        }
+        .skeleton-card .skeleton-body {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .skeleton-card .skeleton-text {
+            width: 60%;
+            height: 16px;
+            background: linear-gradient(90deg, var(--bg) 25%, var(--panel) 50%, var(--bg) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.8s ease-in-out infinite;
+            border-radius: 4px;
+        }
+        .skeleton-card .skeleton-btn {
+            width: 80px;
+            height: 34px;
+            background: linear-gradient(90deg, var(--bg) 25%, var(--panel) 50%, var(--bg) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.8s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        html[data-theme="hacker"] .skeleton-card .skeleton-btn {
+            border-radius: 2px;
+        }
+
+        @keyframes skeletonShimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        @keyframes skeletonPulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.4s var(--ease-out);
+            animation: cardPop 0.5s var(--ease) both;
+            box-shadow: var(--shadow-card);
+        }
+        .card:hover {
+            transform: translateY(-3px) scale(1.005);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+            border-color: var(--accent);
+        }
+        @keyframes cardPop {
+            0% {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .card:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+        .card:nth-child(2) {
+            animation-delay: 0.12s;
+        }
+        .card:nth-child(3) {
+            animation-delay: 0.19s;
+        }
+        .card:nth-child(4) {
+            animation-delay: 0.26s;
+        }
+        .card:nth-child(5) {
+            animation-delay: 0.33s;
+        }
+
+        .card .media-wrapper {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .card .media-wrapper img,
+        .card .media-wrapper video {
+            width: 100%;
+            display: block;
+            max-height: 420px;
+            object-fit: cover;
+            background: #000;
+            transition: transform 0.4s var(--ease-out), filter 0.4s var(--ease-out);
+        }
+        .card .media-wrapper:hover img,
+        .card .media-wrapper:hover video {
+            transform: scale(1.03);
+            filter: brightness(1.05) contrast(1.02);
+        }
+        .card .media-wrapper .zoom-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s var(--ease-out);
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+        }
+        .card .media-wrapper:hover .zoom-indicator {
+            opacity: 1;
+        }
+
+        .card .media-info {
+            padding: 8px 16px 0;
+            font-size: 12px;
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-top: 1px solid var(--border);
+            margin-top: 4px;
+            padding-top: 10px;
+        }
+        .card .media-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .card .media-info .label {
+            color: var(--muted);
+            opacity: 0.7;
+        }
+        .card .media-info .value {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .card .open-ig-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.2s var(--ease-out);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .card .open-ig-btn:hover {
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .card-body {
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: padding 0.3s var(--ease-out);
+            flex-wrap: wrap;
+        }
+        .card-body .left-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 140px;
+            flex-wrap: wrap;
+        }
+        .card-label {
+            font-size: 13px;
+            color: var(--muted);
+            transition: color 0.3s var(--ease-out);
+        }
+        .card-body .right-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dl-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 13.5px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            white-space: nowrap;
+            text-shadow: var(--glow);
+            transition: all 0.25s var(--ease-out);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        html[data-theme="hacker"] .dl-btn {
+            border-radius: 2px;
+        }
+        .dl-btn::after {
+            content: '↓';
+            display: inline-block;
+            transition: transform 0.3s var(--ease);
+        }
+        .dl-btn:hover {
+            background: var(--accent-dim);
+            transform: scale(1.04);
+            box-shadow: 0 0 20px var(--accent-dim);
+        }
+        .dl-btn:active {
+            transform: scale(0.94);
+        }
+        .dl-btn .dl-spinner {
+            display: none;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--accent-dim);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        .dl-btn.downloading .dl-spinner {
+            display: inline-block;
+        }
+        .dl-btn.downloading .dl-text {
+            opacity: 0.6;
+        }
+        .dl-btn.downloading::after {
+            content: '';
+        }
+
+        .caption {
+            font-size: 13px;
+            color: var(--muted);
+            padding: 0 16px 14px;
+            line-height: 1.5;
+            max-height: 4.5em;
+            overflow: hidden;
+            transition: color 0.3s var(--ease-out), max-height 0.5s var(--ease-out);
+        }
+        .caption:hover {
+            max-height: 12em;
+            color: var(--text);
+        }
+
+        pre.raw {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--muted);
+            max-height: 400px;
+            overflow: auto;
+            font-family: var(--font-mono);
+            transition: all 0.3s var(--ease-out);
+            animation: fadeUp 0.4s var(--ease-out) both;
+        }
+        html[data-theme="hacker"] pre.raw {
+            border-radius: 2px;
+        }
+
+        .history-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s var(--ease-out);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .history-btn:hover {
+            color: var(--text);
+            background: var(--accent-dim);
+        }
+
+        .history-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px;
+            min-width: 260px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 200;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .history-dropdown.open {
+            display: block;
+            animation: fadeUp 0.25s var(--ease-out) both;
+        }
+        .history-dropdown .history-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .history-dropdown .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-dropdown .history-item .h-link {
+            color: var(--muted);
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 160px;
+        }
+        .history-dropdown .history-item .h-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .history-dropdown .history-item .h-actions button {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .history-dropdown .history-item .h-actions button:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+        .history-dropdown .history-empty {
+            color: var(--muted);
+            font-size: 13px;
+            padding: 12px 0;
+            text-align: center;
+        }
+        .history-dropdown .history-clear {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-top: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: none;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .history-dropdown .history-clear:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .history-extra {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-extra button {
+            flex: 1;
+            padding: 6px 10px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-out);
+            font-family: inherit;
+            min-width: 60px;
+        }
+
+        .history-extra button:hover {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .history-extra button.import-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-extra button.import-btn input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast {
+            pointer-events: auto;
+            background: var(--panel);
+            border: 1px solid var(--accent);
+            border-radius: var(--radius);
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            transform: translateY(20px) scale(0.9);
+            opacity: 0;
+            transition: transform 0.4s var(--ease), opacity 0.4s var(--ease-out);
+            min-width: 200px;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .toast.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+        .toast .toast-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+        .toast .toast-icon.success {
+            color: #4caf50;
+        }
+        .toast .toast-icon.error {
+            color: #f44336;
+        }
+        .toast .toast-message {
+            flex: 1;
+        }
+        html[data-theme="hacker"] .toast {
+            border-radius: 2px;
+            border-color: var(--accent);
+        }
+
+        .shortcut-hint {
+            font-size: 11px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 6px;
+            opacity: 0.6;
+            transition: opacity 0.3s var(--ease-out);
+        }
+        .shortcut-hint:hover {
+            opacity: 1;
+        }
+        .shortcut-hint kbd {
+            background: var(--panel);
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text);
+        }
+
+        @media (max-width: 480px) {
+            .wrap {
+                padding: 20px 12px 48px;
+            }
+            .input-row {
+                flex-direction: column;
+            }
+            button.primary {
+                padding: 14px;
+                width: 100%;
+                justify-content: center;
+                min-width: unset;
+            }
+            .card-body {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .dl-btn {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+            button.primary.loading {
+                padding: 14px;
+            }
+            .card-body .left-group {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .card-body .right-group {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .history-dropdown {
+                right: -10px;
+                min-width: 220px;
+            }
+            .card .media-info {
+                font-size: 11px;
+                gap: 10px;
+                padding: 6px 12px 0;
+                flex-wrap: wrap;
+            }
+            .toast {
+                padding: 12px 16px;
+                font-size: 13px;
+                min-width: 160px;
+                max-width: 90%;
+            }
+            .navbar-extras button {
+                font-size: 13px;
+                padding: 3px 4px;
+            }
+            .history-extra button {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+            .shortcut-hint {
+                font-size: 10px;
+            }
+            .volume-control input[type="range"] {
+                width: 30px;
+            }
+            .volume-control .vol-label {
+                font-size: 8px;
+                min-width: 18px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 999px;
+            transition: background 0.3s var(--ease-out);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+        html[data-theme="hacker"] ::-webkit-scrollbar-thumb {
+            border-radius: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand"><span class="dot"></span>IG Downriss</div>
+        <div class="nav-right">
+            <div class="navbar-extras">
+                <!-- VOLUME CONTROL -->
+                <div class="volume-control">
+                    <input type="range" id="volumeSlider" min="0" max="200" value="100" />
+                    <span class="vol-label" id="volLabel">100%</span>
+                </div>
+                <button class="sound-btn" id="soundToggle" title="Toggle suara">
+                    <span class="sound-icon" id="soundIcon">🔊</span>
+                </button>
+                <button class="lang-btn" id="langToggle" title="Ganti bahasa">
+                    🌐 <span id="langLabel">ID</span>
+                </button>
+                <div class="lang-dropdown" id="langDropdown">
+                    <button data-lang="id" class="active-lang">🇮🇩 Indonesia</button>
+                    <button data-lang="en">🇬🇧 English</button>
+                </div>
+            </div>
+            <button class="history-btn" id="historyToggle" aria-label="Riwayat">
+                📋 Riwayat
+            </button>
+            <div class="history-dropdown" id="historyDropdown">
+                <div id="historyList"></div>
+                <div class="history-extra">
+                    <button id="exportHistory">💾 Ekspor</button>
+                    <button class="import-btn" id="importHistory">
+                        📂 Impor
+                        <input type="file" id="importFile" accept=".json" />
+                    </button>
+                </div>
+                <button class="history-clear" id="clearHistory">Hapus Semua Riwayat</button>
+            </div>
+            <button class="burger" id="burgerBtn" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- GAME BADGE -->
+    <div class="game-badge" id="gameBadge">⚡ MATRIX MODE ⚡</div>
+
+    <!-- LIGHTBOX OVERLAY -->
+    <div class="lightbox-overlay" id="lightboxOverlay">
+        <button class="lightbox-close" id="lightboxClose">✕</button>
+        <button class="lightbox-nav prev" id="lightboxPrev">‹</button>
+        <button class="lightbox-nav next" id="lightboxNext">›</button>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
+
+    <div class="nav-menu" id="navMenu">
+        <button data-mode="foto" class="mode-btn active">1. Ambil Foto</button>
+        <button data-mode="video" class="mode-btn">2. Ambil Video</button>
+        <button id="waStatusBtn">📱 WA Status</button>
+        <button id="backToIg">3. Kembali ke IG</button>
+        <button id="gameModeBtn" style="color:var(--accent);">🎮 Mode Game</button>
+        <div class="theme-toggle">
+            <span class="theme-label" id="themeLabel">Dark Mode</span>
+            <button class="switch" id="themeSwitch" aria-label="Ubah tema"></button>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <span class="mode-pill" id="modePill">Mode: Foto</span>
+        <h1 id="mainTitle">IG Downriss</h1>
+        <p class="sub" id="subText">Tempel link post, reel, story, atau carousel Instagram untuk mengambil link unduhannya.</p>
+
+        <div class="input-row">
+            <input type="text" id="urlInput" placeholder="https://www.instagram.com/p/..." autocomplete="off" />
+            <button class="primary" id="goBtn">
+                <span class="btn-text" id="btnText">Ambil</span>
+                <span class="btn-spinner"></span>
+            </button>
+        </div>
+        <p class="hint" id="hintText">Hanya untuk konten publik. Hasil berupa link media, bukan file yang otomatis tersimpan.</p>
+
+        <div class="shortcut-hint">
+            <kbd>Ctrl</kbd>+<kbd>Enter</kbd> ambil · <kbd>Ctrl</kbd>+<kbd>K</kbd> fokus input · <kbd>Esc</kbd> tutup preview
+        </div>
+
+        <div class="status" id="status">
+            <div class="spinner"></div>
+            <span id="statusText">Mengambil data...</span>
+        </div>
+
+        <div class="error" id="errorBox"></div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <!-- WA STATUS PANEL -->
+    <div class="wa-panel" id="waPanel">
+        <h1 id="waTitle">WA Status Downloader</h1>
+        <p class="sub">Status yang udah pernah kamu tonton bakal otomatis muncul di sini tiap buka tab ini.</p>
+
+        <div class="wa-toolbar" id="waToolbar">
+            <span>📂 Folder terhubung</span>
+            <span>
+                <button id="waRefreshBtn">🔄 Refresh</button>
+                <button id="waChangeFolderBtn">Ganti folder</button>
+            </span>
+        </div>
+
+        <div class="wa-card" id="waIntroCard">
+            <div class="wa-icon">📱</div>
+            <h2 id="waCardTitle">Cara pakai</h2>
+            <p id="waCardDesc" style="text-align:left; margin-top:10px;"></p>
+            <button class="primary" id="waActionBtn" style="margin-top:16px;">📂 Pilih Folder Status WhatsApp</button>
+            <input type="file" id="waFolderInput" webkitdirectory directory multiple hidden />
+        </div>
+
+        <p class="error" id="waErrorBox" style="display:none;"></p>
+
+        <div class="results" id="waResults"></div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ============================================================
+        //  1. KONFIGURASI
+        // ============================================================
+        // Key RapidAPI TIDAK ada di sini lagi — sudah dipindah ke backend
+        // (lihat api/ig-proxy.js). Frontend cuma manggil endpoint proxy ini.
+        const PROXY_ENDPOINT = "/api/ig-proxy";
+
+        // ============================================================
+        //  2. VOLUME CONTROL
+        // ============================================================
+        let volumeLevel = parseInt(localStorage.getItem('ig-volume') || '100');
+
+        document.getElementById('volumeSlider').addEventListener('input', function() {
+            volumeLevel = parseInt(this.value);
+            localStorage.setItem('ig-volume', volumeLevel);
+            document.getElementById('volLabel').textContent = volumeLevel + '%';
+            // Test sound
+            playSound('click');
+        });
+
+        // Set initial volume
+        document.getElementById('volumeSlider').value = volumeLevel;
+        document.getElementById('volLabel').textContent = volumeLevel + '%';
+
+        function getVolume() {
+            return volumeLevel / 100;
+        }
+
+        // ============================================================
+        //  3. MULTI-BAHASA (i18n)
+        // ============================================================
+        const i18n = {
+            id: {
+                modeFoto: 'Mode: Foto',
+                modeVideo: 'Mode: Video',
+                title: 'IG Downriss',
+                sub: 'Tempel link post, reel, story, atau carousel Instagram untuk mengambil link unduhannya.',
+                btnAmbil: 'Ambil',
+                hint: 'Hanya untuk konten publik. Hasil berupa link media, bukan file yang otomatis tersimpan.',
+                statusLoading: 'Mengambil data...',
+                errorEmpty: 'Tempel link Instagram dulu ya.',
+                errorNotIG: 'Ini kelihatannya bukan link Instagram.',
+                errorServer: 'Server merespons dengan error ({status}). Coba lagi atau cek link-nya.',
+                errorGeneric: 'Terjadi kesalahan saat mengambil data.',
+                errorNoMedia: 'Tidak ada media yang cocok dengan format yang dikenali.',
+                errorNoMediaType: 'Tidak ada media bertipe "{type}" di postingan ini.',
+                noMedia: '😕 Tidak ada media bertipe "{type}" di postingan ini.',
+                downloadSuccess: '✅ {filename} berhasil diunduh!',
+                downloadFailed: '❌ Gagal mengunduh: {error}',
+                unduh: 'Unduh',
+                bukaIg: '📸 Buka di IG',
+                media: 'Media',
+                story: 'Story',
+                resolusi: '📐 Resolusi',
+                ukuran: '📦 Ukuran',
+                durasi: '⏱️ Durasi',
+                tipe: 'Tipe',
+                foto: '🖼️ Foto',
+                video: '🎬 Video',
+                historyEmpty: 'Belum ada riwayat',
+                clearHistory: 'Hapus Semua Riwayat',
+                soundOn: '🔊 Suara Nyala',
+                soundOff: '🔇 Suara Mati',
+                gameModeOn: '🎮 Mode Game: ON',
+                gameModeOff: '🎮 Mode Game: OFF',
+                themeDark: 'Dark Mode',
+                themeHacker: 'Hacker Mode',
+                backToIg: '3. Kembali ke IG',
+                ambilFoto: '1. Ambil Foto',
+                ambilVideo: '2. Ambil Video',
+                zoom: '🔍 Zoom',
+                infoNotAvailable: '—',
+                exportHistory: '💾 Ekspor',
+                importHistory: '📂 Impor',
+                exportSuccess: '✅ Riwayat berhasil diekspor!',
+                importSuccess: '✅ Riwayat berhasil diimpor!',
+                importError: '❌ Gagal mengimpor riwayat',
+                lightboxClose: '✕',
+                copyLink: '📋 Salin Link',
+                copied: '✅ Tersalin!'
+            },
+            en: {
+                modeFoto: 'Mode: Photo',
+                modeVideo: 'Mode: Video',
+                title: 'IG Downriss',
+                sub: 'Paste Instagram post, reel, story, or carousel link to get download links.',
+                btnAmbil: 'Fetch',
+                hint: 'For public content only. Results are media links, not auto-saved files.',
+                statusLoading: 'Fetching data...',
+                errorEmpty: 'Please paste an Instagram link.',
+                errorNotIG: 'This does not look like an Instagram link.',
+                errorServer: 'Server responded with error ({status}). Try again or check the link.',
+                errorGeneric: 'An error occurred while fetching data.',
+                errorNoMedia: 'No media found in the expected format.',
+                errorNoMediaType: 'No media of type "{type}" in this post.',
+                noMedia: '😕 No media of type "{type}" in this post.',
+                downloadSuccess: '✅ {filename} downloaded successfully!',
+                downloadFailed: '❌ Download failed: {error}',
+                unduh: 'Download',
+                bukaIg: '📸 Open in IG',
+                media: 'Media',
+                story: 'Story',
+                resolusi: '📐 Resolution',
+                ukuran: '📦 Size',
+                durasi: '⏱️ Duration',
+                tipe: 'Type',
+                foto: '🖼️ Photo',
+                video: '🎬 Video',
+                historyEmpty: 'No history yet',
+                clearHistory: 'Clear All History',
+                soundOn: '🔊 Sound On',
+                soundOff: '🔇 Sound Off',
+                gameModeOn: '🎮 Game Mode: ON',
+                gameModeOff: '🎮 Game Mode: OFF',
+                themeDark: 'Dark Mode',
+                themeHacker: 'Hacker Mode',
+                backToIg: '3. Back to IG',
+                ambilFoto: '1. Get Photo',
+                ambilVideo: '2. Get Video',
+                zoom: '🔍 Zoom',
+                infoNotAvailable: '—',
+                exportHistory: '💾 Export',
+                importHistory: '📂 Import',
+                exportSuccess: '✅ History exported successfully!',
+                importSuccess: '✅ History imported successfully!',
+                importError: '❌ Failed to import history',
+                lightboxClose: '✕',
+                copyLink: '📋 Copy Link',
+                copied: '✅ Copied!'
+            }
+        };
+
+        let currentLang = 'id';
+
+        function t(key, params) {
+            let str = i18n[currentLang]?.[key] || i18n.id[key] || key;
+            if (params) {
+                Object.keys(params).forEach(k => {
+                    str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), params[k]);
+                });
+            }
+            return str;
+        }
+
+        function updateUIStrings() {
+            document.getElementById('modePill').textContent = currentMode === 'foto' ? t('modeFoto') : t('modeVideo');
+            document.getElementById('mainTitle').textContent = t('title');
+            document.getElementById('subText').textContent = t('sub');
+            document.getElementById('btnText').textContent = t('btnAmbil');
+            document.getElementById('hintText').textContent = t('hint');
+            document.getElementById('statusText').textContent = t('statusLoading');
+            document.getElementById('langLabel').textContent = currentLang.toUpperCase();
+            document.querySelector('[data-mode="foto"]').textContent = t('ambilFoto');
+            document.querySelector('[data-mode="video"]').textContent = t('ambilVideo');
+            document.getElementById('backToIg').textContent = t('backToIg');
+            document.getElementById('themeLabel').textContent = document.documentElement.getAttribute('data-theme') === 'hacker' ?
+                t('themeHacker') : t('themeDark');
+            const soundOn = localStorage.getItem('ig-sound-enabled') !== 'false';
+            document.getElementById('soundIcon').textContent = soundOn ? '🔊' : '🔇';
+            document.getElementById('soundIcon').title = soundOn ? t('soundOn') : t('soundOff');
+            document.querySelector('.history-clear').textContent = t('clearHistory');
+            document.querySelector('#exportHistory').textContent = t('exportHistory');
+            document.querySelector('#importHistory').innerHTML = t('importHistory') +
+                ' <input type="file" id="importFile" accept=".json" />';
+        }
+
+        // ============================================================
+        //  4. SOUND SYSTEM - DENGAN VOLUME
+        // ============================================================
+        let soundEnabled = localStorage.getItem('ig-sound-enabled') !== 'false';
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new(window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                const vol = getVolume();
+
+                if (type === 'success') {
+                    osc.frequency.setValueAtTime(523, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.4 * vol, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.5);
+                } else if (type === 'error') {
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(330, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.4 * vol, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.4);
+                } else {
+                    // click / fetch start
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.25 * vol, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                    osc.start(ctx.currentTime);
+                    osc.stop(ctx.currentTime + 0.1);
+                }
+            } catch (_) { /* silent fail */ }
+        }
+
+        document.getElementById('soundToggle').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('ig-sound-enabled', soundEnabled);
+            document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundIcon').title = soundEnabled ? t('soundOn') : t('soundOff');
+            if (soundEnabled) playSound('success');
+        });
+
+        // ============================================================
+        //  5. GAME MODE
+        // ============================================================
+        let gameMode = localStorage.getItem('ig-game-mode') === 'on';
+
+        function toggleGameMode() {
+            gameMode = !gameMode;
+            localStorage.setItem('ig-game-mode', gameMode ? 'on' : 'off');
+            document.documentElement.setAttribute('data-game', gameMode ? 'on' : 'off');
+            const badge = document.getElementById('gameBadge');
+            if (gameMode) {
+                badge.classList.add('show');
+                setTimeout(() => badge.classList.remove('show'), 2500);
+                document.getElementById('gameModeBtn').textContent = t('gameModeOn');
+                if (soundEnabled) playSound('success');
+            } else {
+                document.getElementById('gameModeBtn').textContent = t('gameModeOff');
+            }
+        }
+
+        document.getElementById('gameModeBtn').addEventListener('click', toggleGameMode);
+        if (gameMode) {
+            document.documentElement.setAttribute('data-game', 'on');
+            document.getElementById('gameModeBtn').textContent = '🎮 Mode Game: ON';
+        }
+
+        // ============================================================
+        //  6. LANGUAGE DROPDOWN
+        // ============================================================
+        document.getElementById('langToggle').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('langDropdown').classList.toggle('open');
+        });
+
+        document.querySelectorAll('#langDropdown button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentLang = btn.dataset.lang;
+                localStorage.setItem('ig-lang', currentLang);
+                document.querySelectorAll('#langDropdown button').forEach(b => b.classList.toggle('active-lang', b ===
+                    btn));
+                document.getElementById('langDropdown').classList.remove('open');
+                updateUIStrings();
+                updatePlaceholder();
+                if (lastFullList.length > 0) {
+                    renderFilteredResults(lastFullList, lastCaption);
+                }
+                if (soundEnabled) playSound('click');
+            });
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('langDropdown').classList.remove('open');
+        });
+
+        const savedLang = localStorage.getItem('ig-lang');
+        if (savedLang && i18n[savedLang]) {
+            currentLang = savedLang;
+            document.querySelectorAll('#langDropdown button').forEach(b => {
+                b.classList.toggle('active-lang', b.dataset.lang === currentLang);
+            });
+        }
+
+        // ============================================================
+        //  7. DOM REFS & STATE
+        // ============================================================
+        const urlInput = document.getElementById('urlInput');
+        const goBtn = document.getElementById('goBtn');
+        const status = document.getElementById('status');
+        const errorBox = document.getElementById('errorBox');
+        const results = document.getElementById('results');
+        const modePill = document.getElementById('modePill');
+        const burgerBtn = document.getElementById('burgerBtn');
+        const navMenu = document.getElementById('navMenu');
+        const themeSwitch = document.getElementById('themeSwitch');
+        const themeLabel = document.getElementById('themeLabel');
+        const historyToggle = document.getElementById('historyToggle');
+        const historyDropdown = document.getElementById('historyDropdown');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const toastContainer = document.getElementById('toastContainer');
+        const lightboxOverlay = document.getElementById('lightboxOverlay');
+        const lightboxClose = document.getElementById('lightboxClose');
+        const lightboxPrev = document.getElementById('lightboxPrev');
+        const lightboxNext = document.getElementById('lightboxNext');
+        const lightboxCounter = document.getElementById('lightboxCounter');
+        const exportHistoryBtn = document.getElementById('exportHistory');
+        const importFile = document.getElementById('importFile');
+
+        let currentMode = 'foto';
+        let historyData = [];
+        let lastFullList = [];
+        let lastCaption = '';
+        let lastLink = '';
+        let lightboxItems = [];
+        let lightboxIndex = 0;
+
+        // ============================================================
+        //  8. TOAST SYSTEM
+        // ============================================================
+        function showToast(message, type = 'success', duration = 3000) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            const icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = `
+                <span class="toast-icon ${type}">${icon}</span>
+                <span class="toast-message">${message}</span>
+            `;
+            toastContainer.appendChild(toast);
+            requestAnimationFrame(() => { toast.classList.add('show'); });
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
+            }, duration);
+            if (type === 'success') playSound('success');
+            else if (type === 'error') playSound('error');
+        }
+
+        // ============================================================
+        //  9. HISTORY
+        // ============================================================
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem('ig-downriss-history');
+                if (saved) historyData = JSON.parse(saved);
+            } catch (_) { historyData = []; }
+            renderHistory();
+        }
+
+        function saveHistory() {
+            try {
+                localStorage.setItem('ig-downriss-history', JSON.stringify(historyData));
+            } catch (_) {}
+            renderHistory();
+        }
+
+        function addHistory(link, caption, mediaCount) {
+            const entry = {
+                link,
+                caption: caption || 'Tanpa keterangan',
+                mediaCount: mediaCount || 1,
+                timestamp: Date.now()
+            };
+            historyData = historyData.filter(h => h.link !== link);
+            historyData.unshift(entry);
+            if (historyData.length > 50) historyData.pop();
+            saveHistory();
+        }
+
+        function renderHistory() {
+            if (!historyList) return;
+            if (historyData.length === 0) {
+                historyList.innerHTML = `<div class="history-empty">${t('historyEmpty')}</div>`;
+                return;
+            }
+            let html = '';
+            historyData.forEach((item, index) => {
+                const date = new Date(item.timestamp);
+                const dateStr = date.toLocaleDateString(currentLang === 'id' ? 'id-ID' : 'en-US') + ' ' + date
+                    .toLocaleTimeString(currentLang === 'id' ? 'id-ID' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <div class="history-item">
+                        <span class="h-link" title="${item.link}">${item.caption.slice(0, 30)}${item.caption.length > 30 ? '…' : ''}</span>
+                        <span style="font-size:10px;color:var(--muted);">${dateStr}</span>
+                        <div class="h-actions">
+                            <button data-hlink="${item.link}" class="h-use" title="Gunakan link">↻</button>
+                            <button data-hindex="${index}" class="h-remove" title="Hapus">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+            document.querySelectorAll('.h-use').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const link = btn.dataset.hlink;
+                    urlInput.value = link;
+                    historyDropdown.classList.remove('open');
+                    fetchMedia();
+                });
+            });
+            document.querySelectorAll('.h-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(btn.dataset.hindex);
+                    historyData.splice(idx, 1);
+                    saveHistory();
+                });
+            });
+        }
+
+        exportHistoryBtn.addEventListener('click', () => {
+            if (historyData.length === 0) {
+                showToast('Riwayat kosong, tidak ada yang diekspor.', 'error', 2000);
+                return;
+            }
+            const json = JSON.stringify(historyData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ig-downriss-history-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+            showToast(t('exportSuccess'), 'success', 2000);
+            historyDropdown.classList.remove('open');
+        });
+
+        importFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const imported = JSON.parse(ev.target.result);
+                    if (Array.isArray(imported)) {
+                        const existingLinks = new Set(historyData.map(h => h.link));
+                        let added = 0;
+                        imported.forEach(item => {
+                            if (!existingLinks.has(item.link)) {
+                                historyData.push(item);
+                                added++;
+                            }
+                        });
+                        historyData.sort((a, b) => b.timestamp - a.timestamp);
+                        if (historyData.length > 50) historyData = historyData.slice(0, 50);
+                        saveHistory();
+                        showToast(t('importSuccess') + ` (${added} baru)`, 'success', 3000);
+                    } else {
+                        showToast(t('importError') + ': format tidak valid', 'error', 3000);
+                    }
+                } catch (err) {
+                    showToast(t('importError') + ': ' + err.message, 'error', 3000);
+                }
+            };
+            reader.readAsText(file);
+            importFile.value = '';
+            historyDropdown.classList.remove('open');
+        });
+
+        historyToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            historyDropdown.classList.toggle('open');
+        });
+
+        document.addEventListener('click', () => {
+            historyDropdown.classList.remove('open');
+        });
+
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm(t('clearHistory') + '?')) {
+                historyData = [];
+                saveHistory();
+            }
+        });
+
+        loadHistory();
+
+        // ============================================================
+        //  10. BURGER & NAV
+        // ============================================================
+        burgerBtn.addEventListener('click', () => {
+            burgerBtn.classList.toggle('open');
+            navMenu.classList.toggle('open');
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const newMode = btn.dataset.mode;
+                if (newMode === currentMode) return;
+                currentMode = newMode;
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+                modePill.textContent = currentMode === 'foto' ? t('modeFoto') : t('modeVideo');
+                updatePlaceholder();
+                navMenu.classList.remove('open');
+                burgerBtn.classList.remove('open');
+                if (lastFullList.length > 0) {
+                    renderFilteredResults(lastFullList, lastCaption);
+                }
+                if (soundEnabled) playSound('click');
+            });
+        });
+
+        document.getElementById('backToIg').addEventListener('click', () => {
+            window.open('https://www.instagram.com', '_blank', 'noopener');
+        });
+
+        // ============================================================
+        //  10b. TAB WA STATUS (AUTO-LOAD)
+        // ============================================================
+        const waPanel = document.getElementById('waPanel');
+        const waStatusBtn = document.getElementById('waStatusBtn');
+        const igWrap = document.querySelector('.wrap');
+        const waFolderInput = document.getElementById('waFolderInput');
+        const waActionBtn = document.getElementById('waActionBtn');
+        const waResults = document.getElementById('waResults');
+        const waErrorBox = document.getElementById('waErrorBox');
+        const waIntroCard = document.getElementById('waIntroCard');
+        const waToolbar = document.getElementById('waToolbar');
+        const waCardTitle = document.getElementById('waCardTitle');
+        const waCardDesc = document.getElementById('waCardDesc');
+        const waRefreshBtn = document.getElementById('waRefreshBtn');
+        const waChangeFolderBtn = document.getElementById('waChangeFolderBtn');
+
+        const supportsFSAccess = 'showDirectoryPicker' in window;
+        let waMode = 'none';
+        let waInitialized = false;
+
+        // -- IndexedDB kecil buat nyimpen izin akses folder --
+        function idbOpen() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('wa-status-db', 1);
+                req.onupgradeneeded = () => req.result.createObjectStore('handles');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function idbSet(key, val) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('handles', 'readwrite');
+                tx.objectStore('handles').put(val, key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        async function idbGet(key) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('handles', 'readonly');
+                const req = tx.objectStore('handles').get(key);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function idbDelete(key) {
+            const db = await idbOpen();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction('handles', 'readwrite');
+                tx.objectStore('handles').delete(key);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        function waShowError(msg) {
+            waErrorBox.textContent = msg;
+            waErrorBox.style.display = 'block';
+        }
+
+        function waRenderIntroState(mode) {
+            waMode = mode;
+            waErrorBox.style.display = 'none';
+            if (mode === 'none') {
+                waCardTitle.textContent = 'Setup Sekali Saja';
+                waCardDesc.innerHTML = `1. Buka minimal satu status kontak dulu di WhatsApp (biar tersimpan sementara di HP).<br><br>
+                    2. Klik tombol di bawah, lalu pilih folder ini:<br>
+                    <code style="display:block; margin:6px 0; padding:8px; background:var(--bg); border-radius:8px; font-size:11px; word-break:break-all;">Android/media/com.whatsapp/WhatsApp/Media/.Statuses</code>
+                    (HP lama: <code style="font-size:11px;">WhatsApp/Media/.Statuses</code>)<br><br>
+                    3. Kalau foldernya tidak kelihatan, aktifkan dulu "Tampilkan file tersembunyi" di file manager HP.<br><br>
+                    Setelah dipilih sekali, status baru bakal <b>otomatis muncul</b> tiap kamu buka tab ini — nggak perlu pilih folder lagi.`;
+                waActionBtn.textContent = '📂 Pilih Folder Status WhatsApp';
+                waIntroCard.style.display = '';
+                waToolbar.style.display = 'none';
+            } else if (mode === 'needPermission') {
+                waCardTitle.textContent = 'Lanjutkan Akses Folder';
+                waCardDesc.innerHTML = 'Browser minta konfirmasi ulang buat baca folder status WA kamu. Foldernya sudah tersimpan, tinggal klik sekali — nggak perlu cari folder lagi.';
+                waActionBtn.textContent = '🔓 Lanjutkan';
+                waIntroCard.style.display = '';
+                waToolbar.style.display = 'none';
+            } else if (mode === 'unsupported') {
+                waCardTitle.textContent = 'Browser Tidak Mendukung Auto-load';
+                waCardDesc.innerHTML = 'Browser ini belum bisa nyimpen izin folder, jadi kamu perlu pilih foldernya manual tiap kali buka tab ini.';
+                waActionBtn.textContent = '📂 Pilih Folder Status WhatsApp';
+                waIntroCard.style.display = '';
+                waToolbar.style.display = 'none';
+            } else if (mode === 'loading') {
+                waIntroCard.style.display = 'none';
+                waToolbar.style.display = 'none';
+                waResults.innerHTML = '<p class="hint">Memuat status...</p>';
+            } else if (mode === 'loaded') {
+                waIntroCard.style.display = 'none';
+                waToolbar.style.display = 'flex';
+            }
+        }
+
+        async function waLoadFromHandle(handle) {
+            waRenderIntroState('loading');
+            const mediaFiles = [];
+            try {
+                for await (const [name, entry] of handle.entries()) {
+                    if (entry.kind !== 'file') continue;
+                    const lower = name.toLowerCase();
+                    if (lower.startsWith('.')) continue;
+                    if (!/\.(jpg|jpeg|png|webp|mp4)$/.test(lower)) continue;
+                    mediaFiles.push(await entry.getFile());
+                }
+            } catch (err) {
+                waRenderIntroState('loaded');
+                waShowError('Gagal membaca folder. Coba klik "Ganti folder" lalu pilih ulang.');
+                return;
+            }
+            waRenderIntroState('loaded');
+            waResults.innerHTML = '';
+            if (mediaFiles.length === 0) {
+                waShowError('Belum ada status tersimpan. Buka dulu status kontak di WhatsApp, lalu klik Refresh.');
+                return;
+            }
+            renderWaResults(mediaFiles);
+        }
+
+        async function waInit() {
+            if (!supportsFSAccess) {
+                waRenderIntroState('unsupported');
+                return;
+            }
+            let handle;
+            try {
+                handle = await idbGet('dirHandle');
+            } catch (e) {
+                handle = null;
+            }
+            if (!handle) {
+                waRenderIntroState('none');
+                return;
+            }
+            const perm = await handle.queryPermission({ mode: 'read' });
+            if (perm === 'granted') {
+                await waLoadFromHandle(handle);
+            } else {
+                waRenderIntroState('needPermission');
+            }
+        }
+
+        waStatusBtn.addEventListener('click', () => {
+            const isShowingWa = waPanel.classList.contains('show');
+            if (isShowingWa) {
+                waPanel.classList.remove('show');
+                igWrap.style.display = '';
+                waStatusBtn.classList.remove('active');
+            } else {
+                waPanel.classList.add('show');
+                igWrap.style.display = 'none';
+                waStatusBtn.classList.add('active');
+                waInit();
+            }
+            navMenu.classList.remove('open');
+            burgerBtn.classList.remove('open');
+            if (soundEnabled) playSound('click');
+        });
+
+        waActionBtn.addEventListener('click', async () => {
+            if (waMode === 'unsupported') {
+                waFolderInput.click();
+                return;
+            }
+            if (waMode === 'needPermission') {
+                const handle = await idbGet('dirHandle');
+                if (!handle) { waRenderIntroState('none'); return; }
+                try {
+                    const perm = await handle.requestPermission({ mode: 'read' });
+                    if (perm === 'granted') {
+                        await waLoadFromHandle(handle);
+                    } else {
+                        waShowError('Izin akses folder ditolak.');
+                    }
+                } catch (err) {
+                    waShowError('Gagal minta izin akses folder.');
+                }
+                return;
+            }
+            // mode 'none' + FS Access didukung
+            try {
+                const handle = await window.showDirectoryPicker();
+                await idbSet('dirHandle', handle);
+                await waLoadFromHandle(handle);
+            } catch (err) {
+                if (err.name !== 'AbortError') waShowError('Gagal membuka folder.');
+            }
+        });
+
+        waFolderInput.addEventListener('change', () => {
+            const files = Array.from(waFolderInput.files || []);
+            const mediaFiles = files.filter(f => {
+                const name = f.name.toLowerCase();
+                if (name.startsWith('.')) return false;
+                return /\.(jpg|jpeg|png|webp|mp4)$/.test(name);
+            });
+            waRenderIntroState('loaded');
+            waResults.innerHTML = '';
+            if (mediaFiles.length === 0) {
+                waShowError('Tidak ada foto/video status ditemukan. Pastikan folder yang dipilih benar dan sudah pernah buka status di WhatsApp.');
+                return;
+            }
+            renderWaResults(mediaFiles);
+            if (soundEnabled) playSound('success');
+        });
+
+        waRefreshBtn.addEventListener('click', async () => {
+            if (supportsFSAccess) {
+                const handle = await idbGet('dirHandle');
+                if (handle) { await waLoadFromHandle(handle); return; }
+            }
+            waFolderInput.click();
+        });
+
+        waChangeFolderBtn.addEventListener('click', async () => {
+            if (supportsFSAccess) {
+                try { await idbDelete('dirHandle'); } catch (e) {}
+            }
+            waResults.innerHTML = '';
+            waRenderIntroState('none');
+        });
+
+        function renderWaResults(mediaFiles) {
+            mediaFiles.forEach((file, i) => {
+                const objUrl = URL.createObjectURL(file);
+                const isVideo = /\.mp4$/i.test(file.name);
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'media-wrapper';
+
+                const mediaEl = document.createElement(isVideo ? 'video' : 'img');
+                mediaEl.src = objUrl;
+                if (isVideo) {
+                    mediaEl.muted = true;
+                    mediaEl.setAttribute('playsinline', '');
+                    mediaEl.controls = true;
+                }
+                wrapper.appendChild(mediaEl);
+                card.appendChild(wrapper);
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'media-info';
+                infoDiv.innerHTML = `
+                    <span><span class="label">Ukuran</span> <span class="value">${formatFileSize(file.size)}</span></span>
+                    <span><span class="label">Tipe</span> <span class="value">${isVideo ? 'Video' : 'Foto'}</span></span>
+                `;
+                card.appendChild(infoDiv);
+
+                const body = document.createElement('div');
+                body.className = 'card-body';
+
+                const leftGroup = document.createElement('div');
+                leftGroup.className = 'left-group';
+                const label = document.createElement('span');
+                label.className = 'card-label';
+                label.textContent = `Status ${i + 1}`;
+                leftGroup.appendChild(label);
+                body.appendChild(leftGroup);
+
+                const rightGroup = document.createElement('div');
+                rightGroup.className = 'right-group';
+                const dlBtn = document.createElement('a');
+                dlBtn.className = 'dl-btn';
+                dlBtn.href = objUrl;
+                dlBtn.download = file.name;
+                dlBtn.innerHTML = `<span class="dl-text">⬇ Unduh</span>`;
+                rightGroup.appendChild(dlBtn);
+                body.appendChild(rightGroup);
+
+                card.appendChild(body);
+                waResults.appendChild(card);
+            });
+        }
+
+        function updatePlaceholder() {
+            const isStory = lastLink && lastLink.includes('/stories/');
+            if (isStory) {
+                urlInput.placeholder = 'https://www.instagram.com/stories/...';
+            } else {
+                urlInput.placeholder = currentMode === 'foto' ?
+                    'https://www.instagram.com/p/...' :
+                    'https://www.instagram.com/reel/...';
+            }
+        }
+
+        // ============================================================
+        //  11. THEME
+        // ============================================================
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeLabel.textContent = theme === 'hacker' ? t('themeHacker') : t('themeDark');
+            try { localStorage.setItem('ig-downriss-theme', theme); } catch (e) {}
+        }
+
+        themeSwitch.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            applyTheme(current === 'hacker' ? 'dark' : 'hacker');
+            if (soundEnabled) playSound('click');
+        });
+
+        (function initTheme() {
+            let saved = 'dark';
+            try { saved = localStorage.getItem('ig-downriss-theme') || 'dark'; } catch (e) {}
+            applyTheme(saved);
+        })();
+
+        // ============================================================
+        //  12. KEYBOARD SHORTCUTS
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                fetchMedia();
+                return;
+            }
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                urlInput.focus();
+                urlInput.select();
+                return;
+            }
+            if (e.key === 'Escape' && lightboxOverlay.classList.contains('open')) {
+                closeLightbox();
+                return;
+            }
+            if (lightboxOverlay.classList.contains('open')) {
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    navigateLightbox(-1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    navigateLightbox(1);
+                }
+            }
+        });
+
+        // ============================================================
+        //  13. LIGHTBOX
+        // ============================================================
+        function openLightbox(items, index) {
+            if (!items || items.length === 0) return;
+            lightboxItems = items;
+            lightboxIndex = index;
+            renderLightbox();
+            lightboxOverlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            if (soundEnabled) playSound('click');
+        }
+
+        function closeLightbox() {
+            lightboxOverlay.classList.remove('open');
+            document.body.style.overflow = '';
+            const content = lightboxOverlay.querySelector('.lightbox-content');
+            if (content) content.remove();
+        }
+
+        function navigateLightbox(direction) {
+            const newIndex = (lightboxIndex + direction + lightboxItems.length) % lightboxItems.length;
+            if (newIndex !== lightboxIndex) {
+                lightboxIndex = newIndex;
+                renderLightbox();
+            }
+        }
+
+        function renderLightbox() {
+            const oldContent = lightboxOverlay.querySelector('.lightbox-content');
+            if (oldContent) oldContent.remove();
+
+            const item = lightboxItems[lightboxIndex];
+            if (!item) return;
+
+            let el;
+            if (item.type === 'video') {
+                el = document.createElement('video');
+                el.src = item.url;
+                el.controls = true;
+                el.autoplay = true;
+                el.className = 'lightbox-content';
+                el.style.maxWidth = '90%';
+                el.style.maxHeight = '90%';
+                el.style.borderRadius = '8px';
+            } else {
+                el = document.createElement('img');
+                el.src = item.url;
+                el.className = 'lightbox-content';
+                el.alt = 'Preview';
+                el.style.maxWidth = '90%';
+                el.style.maxHeight = '90%';
+                el.style.borderRadius = '8px';
+                el.style.objectFit = 'contain';
+            }
+
+            lightboxOverlay.appendChild(el);
+
+            if (lightboxItems.length > 1) {
+                lightboxCounter.textContent = `${lightboxIndex + 1} / ${lightboxItems.length}`;
+                lightboxCounter.style.display = 'block';
+            } else {
+                lightboxCounter.style.display = 'none';
+            }
+
+            lightboxPrev.style.display = lightboxItems.length > 1 ? 'block' : 'none';
+            lightboxNext.style.display = lightboxItems.length > 1 ? 'block' : 'none';
+        }
+
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightboxOverlay.addEventListener('click', (e) => {
+            if (e.target === lightboxOverlay) closeLightbox();
+        });
+        lightboxPrev.addEventListener('click', (e) => { e.stopPropagation();
+            navigateLightbox(-1); });
+        lightboxNext.addEventListener('click', (e) => { e.stopPropagation();
+            navigateLightbox(1); });
+
+        // ============================================================
+        //  14. FETCH LOGIC
+        // ============================================================
+        goBtn.addEventListener('click', fetchMedia);
+        urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMedia(); });
+
+        function setLoading(loading) {
+            goBtn.classList.toggle('loading', loading);
+            goBtn.disabled = loading;
+            urlInput.disabled = loading;
+            results.classList.toggle('loading', loading);
+            if (loading) {
+                results.innerHTML = '';
+                for (let i = 0; i < 2; i++) {
+                    const skeleton = document.createElement('div');
+                    skeleton.className = 'skeleton-card';
+                    skeleton.innerHTML = `
+                        <div class="skeleton-img"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-text"></div>
+                            <div class="skeleton-btn"></div>
+                        </div>
+                    `;
+                    results.appendChild(skeleton);
+                }
+                status.classList.remove('show');
+                if (soundEnabled) playSound('click');
+            } else {
+                results.classList.remove('loading');
+                document.querySelectorAll('.skeleton-card').forEach(el => el.remove());
+            }
+        }
+
+        function showError(msg) {
+            errorBox.textContent = msg;
+            errorBox.classList.add('show');
+            if (soundEnabled) playSound('error');
+        }
+
+        function clearError() {
+            errorBox.classList.remove('show');
+            errorBox.textContent = '';
+        }
+
+        async function fetchFileSize(url) {
+            try {
+                const res = await fetch(url, { method: 'HEAD' });
+                if (res.ok) {
+                    const size = res.headers.get('content-length');
+                    if (size) return parseInt(size, 10);
+                }
+            } catch (_) {}
+            return null;
+        }
+
+        async function normalizeItemWithSize(item) {
+            let result = {
+                url: null,
+                type: 'image',
+                thumb: null,
+                width: null,
+                height: null,
+                fileSize: null,
+                duration: null,
+                isStory: false
+            };
+            if (typeof item === 'string') {
+                result.url = item;
+                result.type = guessType(item);
+                const size = await fetchFileSize(item);
+                if (size) result.fileSize = size;
+                return result;
+            }
+            const isStory = item.is_story === true || item.story === true ||
+                (item.type && item.type === 'story') ||
+                (item.media_type && item.media_type === 'story');
+            const url = item.media || item.video_url || item.download_url || item.url || item.image_url ||
+                item.thumbnail_url || item.media_url || item.link;
+            if (!url) return null;
+            result.url = url;
+            result.type = item.type || guessType(url);
+            result.thumb = item.thumb || item.thumbnail_url || item.thumbnail || item.image_url || (result.type === 'image' ?
+                url : null);
+            result.width = item.width || item.dimensions?.width || null;
+            result.height = item.height || item.dimensions?.height || null;
+            result.duration = item.duration || item.video_duration || null;
+            result.isStory = isStory || url.includes('/stories/') || (lastLink && lastLink.includes('/stories/'));
+            if (!result.fileSize) {
+                const size = await fetchFileSize(url);
+                if (size) result.fileSize = size;
+            } else if (typeof result.fileSize === 'string') {
+                result.fileSize = parseInt(result.fileSize, 10) || null;
+            }
+            return result;
+        }
+
+        function guessType(url) {
+            if (/\.mp4($|\?)/i.test(url) || /\/video\//i.test(url) || /\.mov($|\?)/i.test(url)) {
+                return 'video';
+            }
+            return 'image';
+        }
+
+        function detectLinkType(link) {
+            if (link.includes('/stories/')) return 'story';
+            if (link.includes('/reel/')) return 'reel';
+            if (link.includes('/p/')) return 'post';
+            if (link.includes('/tv/')) return 'igtv';
+            return 'unknown';
+        }
+
+        async function fetchMedia() {
+            const link = urlInput.value.trim();
+            clearError();
+            if (!link) { showError(t('errorEmpty')); return; }
+            if (!/instagram\.com/i.test(link)) { showError(t('errorNotIG')); return; }
+            lastLink = link;
+            const linkType = detectLinkType(link);
+            if (linkType === 'story') {
+                urlInput.placeholder = 'https://www.instagram.com/stories/...';
+            }
+            setLoading(true);
+            try {
+                const endpoint = `${PROXY_ENDPOINT}?url=${encodeURIComponent(link)}`;
+                const res = await fetch(endpoint, { method: 'GET' });
+                if (!res.ok) {
+                    throw new Error(t('errorServer', { status: res.status }));
+                }
+                const data = await res.json();
+                lastCaption = data?.caption || data?.title || data?.description || '';
+                const candidates = [
+                    data?.data, data?.medias, data?.media, data?.result, data?.results,
+                    data?.items, data?.slides, data?.carousel
+                ].filter(Boolean);
+                let rawList = candidates.find(c => Array.isArray(c)) || [];
+                if (!rawList.length && Array.isArray(data)) rawList = data;
+                if (!rawList.length && (data?.media || data?.video_url || data?.image_url || data?.download_url || data
+                        ?.url)) {
+                    rawList = [data];
+                }
+                if (!rawList.length) {
+                    showError(t('errorNoMedia'));
+                    const raw = document.createElement('pre');
+                    raw.className = 'raw';
+                    raw.textContent = JSON.stringify(data, null, 2);
+                    results.appendChild(raw);
+                    setLoading(false);
+                    return;
+                }
+                const normalizedList = [];
+                for (const item of rawList) {
+                    const normalized = await normalizeItemWithSize(item);
+                    if (normalized) {
+                        if (linkType === 'story') {
+                            normalized.isStory = true;
+                        }
+                        normalizedList.push(normalized);
+                    }
+                }
+                if (normalizedList.length === 0) {
+                    showError(t('errorNoMedia'));
+                    setLoading(false);
+                    return;
+                }
+                lastFullList = normalizedList;
+                if (lastLink) {
+                    addHistory(lastLink, lastCaption, normalizedList.length);
+                }
+                renderFilteredResults(normalizedList, lastCaption);
+            } catch (err) {
+                showError(err.message || t('errorGeneric'));
+                results.innerHTML = '';
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // ============================================================
+        //  15. FILTER & RENDER
+        // ============================================================
+        function renderFilteredResults(list, caption) {
+            const targetType = currentMode === 'foto' ? 'image' : 'video';
+            const filtered = list.filter(item => item.type === targetType);
+            if (filtered.length === 0) {
+                results.innerHTML = '';
+                const msg = document.createElement('div');
+                msg.style.cssText = `
+                    padding: 20px 16px;
+                    background: var(--panel);
+                    border: 1px solid var(--border);
+                    border-radius: var(--radius);
+                    color: var(--muted);
+                    text-align: center;
+                    font-size: 14px;
+                    animation: fadeUp 0.4s var(--ease-out) both;
+                `;
+                const typeLabel = currentMode === 'foto' ? t('foto') : t('video');
+                const isStory = list.some(item => item.isStory);
+                const storyText = isStory ? ` (${t('story')})` : '';
+                msg.textContent = t('noMedia', { type: typeLabel }) + storyText;
+                results.appendChild(msg);
+                return;
+            }
+            renderResults(filtered, caption);
+        }
+
+        // ============================================================
+        //  16. DOWNLOAD
+        // ============================================================
+        function getExtensionFromUrl(url, defaultExt) {
+            try {
+                const urlObj = new URL(url);
+                const path = urlObj.pathname;
+                const match = path.match(/\.([^./]+)$/);
+                if (match) return match[1];
+            } catch (_) { return defaultExt; }
+        }
+
+        function getTimestamp() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            return `${y}${m}${d}_${h}${min}${s}`;
+        }
+
+        async function downloadFile(url, filename) {
+            const btn = document.querySelector(`[data-dl-url="${url}"]`);
+            if (btn) { btn.classList.add('downloading');
+                btn.disabled = true; }
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Gagal mengunduh (${response.status})`);
+                const blob = await response.blob();
+                let ext = getExtensionFromUrl(url, 'bin');
+                if (ext === 'bin') {
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('video')) ext = 'mp4';
+                    else if (contentType.includes('image')) ext = 'jpg';
+                    else if (contentType.includes('webp')) ext = 'webp';
+                    else if (contentType.includes('png')) ext = 'png';
+                    else if (contentType.includes('gif')) ext = 'gif';
+                }
+                const ts = getTimestamp();
+                const fullName = `IG DOWNRISS_${ts}.${ext}`;
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fullName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+                showToast(t('downloadSuccess', { filename: fullName }), 'success', 3000);
+            } catch (err) {
+                console.error('Download error:', err);
+                showToast(t('downloadFailed', { error: err.message }), 'error', 4000);
+            } finally {
+                if (btn) { btn.classList.remove('downloading');
+                    btn.disabled = false; }
+            }
+        }
+
+        // ============================================================
+        //  17. FORMAT HELPERS
+        // ============================================================
+        function formatFileSize(bytes) {
+            if (!bytes || isNaN(bytes)) return null;
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds) return null;
+            const secs = Math.floor(seconds);
+            const mins = Math.floor(secs / 60);
+            const remainingSecs = secs % 60;
+            if (mins > 0) return `${mins}m ${remainingSecs}s`;
+            return `${secs}s`;
+        }
+
+        // ============================================================
+        //  18. RENDER RESULTS
+        // ============================================================
+        function renderResults(list, caption) {
+            results.innerHTML = '';
+            const lightboxData = list.map(item => ({
+                url: item.url,
+                type: item.type,
+                thumb: item.thumb
+            }));
+
+            list.forEach((item, i) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'media-wrapper';
+                wrapper.style.cursor = 'pointer';
+
+                let mediaEl;
+                if (item.type === 'video') {
+                    const thumbImg = document.createElement('img');
+                    thumbImg.src = item.thumb || item.url;
+                    thumbImg.style.width = '100%';
+                    thumbImg.style.display = 'block';
+                    thumbImg.style.maxHeight = '420px';
+                    thumbImg.style.objectFit = 'cover';
+                    wrapper.appendChild(thumbImg);
+                    wrapper.dataset.url = item.url;
+                    wrapper.dataset.type = 'video';
+                } else {
+                    mediaEl = document.createElement('img');
+                    mediaEl.src = item.thumb || item.url;
+                    mediaEl.loading = 'lazy';
+                    wrapper.appendChild(mediaEl);
+                    wrapper.dataset.url = item.url;
+                    wrapper.dataset.type = 'image';
+                }
+
+                const zoomInd = document.createElement('div');
+                zoomInd.className = 'zoom-indicator';
+                zoomInd.textContent = t('zoom');
+                wrapper.appendChild(zoomInd);
+
+                wrapper.addEventListener('click', () => {
+                    openLightbox(lightboxData, i);
+                });
+
+                card.appendChild(wrapper);
+
+                if (item.isStory) {
+                    const storyBadge = document.createElement('div');
+                    storyBadge.style.cssText = `
+                        position: absolute;
+                        top: 10px;
+                        left: 10px;
+                        background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+                        color: #fff;
+                        font-size: 10px;
+                        font-weight: 700;
+                        padding: 3px 10px;
+                        border-radius: 20px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                        backdrop-filter: blur(4px);
+                        z-index: 2;
+                    `;
+                    storyBadge.textContent = `📸 ${t('story')}`;
+                    wrapper.appendChild(storyBadge);
+                }
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'media-info';
+                let infoHtml = '';
+                if (item.width && item.height) {
+                    infoHtml +=
+                        `<span><span class="label">${t('resolusi')}</span> <span class="value">${item.width}×${item.height}</span></span>`;
+                } else {
+                    infoHtml += `<span><span class="label">${t('resolusi')}</span> <span class="value">${t('infoNotAvailable')}</span></span>`;
+                }
+                const sizeStr = formatFileSize(item.fileSize);
+                if (sizeStr) {
+                    infoHtml += `<span><span class="label">${t('ukuran')}</span> <span class="value">${sizeStr}</span></span>`;
+                } else {
+                    infoHtml += `<span><span class="label">${t('ukuran')}</span> <span class="value">${t('infoNotAvailable')}</span></span>`;
+                }
+                if (item.type === 'video' && item.duration) {
+                    const durStr = formatDuration(item.duration);
+                    if (durStr) {
+                        infoHtml += `<span><span class="label">${t('durasi')}</span> <span class="value">${durStr}</span></span>`;
+                    }
+                }
+                const typeLabel = item.type === 'video' ? t('video') : t('foto');
+                infoHtml += `<span><span class="label">${t('tipe')}</span> <span class="value">${typeLabel}</span></span>`;
+                if (item.isStory) {
+                    infoHtml += `<span><span class="label">📌</span> <span class="value" style="color:var(--accent);">${t('story')}</span></span>`;
+                }
+                infoDiv.innerHTML = infoHtml;
+                card.appendChild(infoDiv);
+
+                const body = document.createElement('div');
+                body.className = 'card-body';
+
+                const leftGroup = document.createElement('div');
+                leftGroup.className = 'left-group';
+                const label = document.createElement('span');
+                label.className = 'card-label';
+                label.textContent = list.length > 1 ? `${t('media')} ${i+1}` : t('media');
+
+                const openIg = document.createElement('button');
+                openIg.className = 'open-ig-btn';
+                openIg.innerHTML = t('bukaIg');
+                openIg.title = 'Buka postingan asli di Instagram';
+                openIg.addEventListener('click', () => {
+                    if (lastLink) window.open(lastLink, '_blank', 'noopener');
+                });
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = t('copyLink');
+                copyBtn.title = 'Salin link media ke clipboard';
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(item.url);
+                        copyBtn.innerHTML = t('copied');
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = t('copyLink');
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                        if (soundEnabled) playSound('success');
+                    } catch (_) {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = item.url;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        copyBtn.innerHTML = t('copied');
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = t('copyLink');
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                    }
+                });
+
+                leftGroup.appendChild(label);
+                leftGroup.appendChild(openIg);
+                leftGroup.appendChild(copyBtn);
+                body.appendChild(leftGroup);
+
+                const rightGroup = document.createElement('div');
+                rightGroup.className = 'right-group';
+
+                const dlBtn = document.createElement('button');
+                dlBtn.className = 'dl-btn';
+                dlBtn.dataset.dlUrl = item.url;
+                dlBtn.innerHTML = `
+                    <span class="dl-spinner"></span>
+                    <span class="dl-text">${t('unduh')}</span>
+                `;
+                dlBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    downloadFile(item.url, 'IG DOWNRISS');
+                });
+
+                rightGroup.appendChild(dlBtn);
+                body.appendChild(rightGroup);
+                card.appendChild(body);
+
+                if (caption && i === 0) {
+                    const cap = document.createElement('div');
+                    cap.className = 'caption';
+                    cap.textContent = caption;
+                    card.appendChild(cap);
+                }
+
+                results.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        //  19. INIT
+        // ============================================================
+        updateUIStrings();
+        updatePlaceholder();
+
+        console.log('🚀 IG Downriss siap!');
+        console.log('🎮 Mode Game: ' + (gameMode ? 'ON' : 'OFF'));
+        console.log('🔊 Suara: ' + (soundEnabled ? 'ON' : 'OFF') + ' | Volume: ' + volumeLevel + '%');
+        console.log('🌐 Bahasa: ' + currentLang.toUpperCase());
+        console.log('🖼️ Lightbox: Klik thumbnail untuk preview fullscreen');
+        console.log('⌨️ Shortcuts: Ctrl+Enter fetch, Ctrl+K fokus, Esc tutup');
+        console.log('💾 History: Ekspor/Impor riwayat tersedia');
+        console.log('🔊 Volume slider di navbar untuk mengatur keras suara');
+    </script>
+</body>
+</html>
