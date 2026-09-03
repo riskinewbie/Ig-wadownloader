@@ -544,6 +544,22 @@
             transition: background 0.3s var(--ease-out), color 0.3s var(--ease-out);
         }
 
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('mrrobot.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+
         html[data-theme="hacker"] body {
             font-family: var(--font-mono);
             background-image:
@@ -2017,7 +2033,7 @@
                 gameModeOn: '🎮 Mode Game: ON',
                 gameModeOff: '🎮 Mode Game: OFF',
                 themeDark: 'Dark Mode',
-                themeHacker: 'Hacker Mode',
+                themeHacker: 'Dark Neon Mode',
                 backToIg: '3. Kembali ke IG',
                 ambilFoto: '1. Ambil Foto',
                 ambilVideo: '2. Ambil Video',
@@ -2066,7 +2082,7 @@
                 gameModeOn: '🎮 Game Mode: ON',
                 gameModeOff: '🎮 Game Mode: OFF',
                 themeDark: 'Dark Mode',
-                themeHacker: 'Hacker Mode',
+                themeHacker: 'Dark Neon Mode',
                 backToIg: '3. Back to IG',
                 ambilFoto: '1. Get Photo',
                 ambilVideo: '2. Get Video',
