@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/ig-scrape.py": {
+      "runtime": "@vercel/python@4"
+    }
+  }
+}
