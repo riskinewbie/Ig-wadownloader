@@ -1,22 +1,39 @@
 from flask import Flask, request, jsonify
 import yt_dlp
 import re
+
 app = Flask(__name__)
+
+
 def is_youtube_url(url):
     return bool(re.match(r"^https?://(www\.)?(youtube\.com|youtu\.be|m\.youtube\.com)/", url))
+
+
 @app.route("/api/yt-scrape", methods=["GET"])
 def scrape():
     url = request.args.get("url", "")
+
     if not url:
         return jsonify({"error": "Parameter 'url' wajib diisi"}), 400
+
     if not is_youtube_url(url):
         return jsonify({"error": "URL harus link YouTube yang valid"}), 400
+
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
         "noplaylist": True,
+        # Berpura-pura jadi app Android YouTube, bukan browser web biasa —
+        # client Android ini biasanya tidak kena pemeriksaan "sign in to
+        # confirm you're not a bot" yang sering muncul dari IP server cloud.
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"],
+            }
+        },
     }
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
