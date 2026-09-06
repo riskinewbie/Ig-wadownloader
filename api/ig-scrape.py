@@ -84,41 +84,4 @@ def scrape():
         return jsonify({"error": str(e)}), 500
     except Exception as e:
         return jsonify({"error": "Gagal mengambil data post.", "detail": str(e)}), 500
-
-
-# Vercel otomatis mendeteksi variabel 'app' ini sebagai entry point WSGI.
-    if not re.match(r"^https?://(www\.)?instagram\.com/", url):
-        return jsonify({"error": "URL harus link Instagram yang valid"}), 400
-
-    try:
-        shortcode = extract_shortcode(url)
-        post = instaloader.Post.from_shortcode(L.context, shortcode)
-
-        media = []
-        if post.typename == "GraphSidecar":
-            # Carousel (banyak foto/video dalam 1 post)
-            for node in post.get_sidecar_nodes():
-                media.append({
-                    "type": "video" if node.is_video else "image",
-                    "url": node.video_url if node.is_video else node.display_url,
-                })
-        else:
-            media.append({
-                "type": "video" if post.is_video else "image",
-                "url": post.video_url if post.is_video else post.url,
-            })
-
-        return jsonify({
-            "caption": post.caption or "",
-            "media": media,
-        })
-
-    except instaloader.exceptions.ConnectionException as e:
-        return jsonify({"error": "Instagram menolak/membatasi permintaan (rate limit).", "detail": str(e)}), 429
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": "Gagal mengambil data post.", "detail": str(e)}), 500
-
-
 # Vercel otomatis mendeteksi variabel 'app' ini sebagai entry point WSGI.
