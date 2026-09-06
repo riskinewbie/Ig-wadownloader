@@ -1,24 +1,16 @@
 from flask import Flask, request, jsonify
 import yt_dlp
 import re
-
 app = Flask(__name__)
-
-
 def is_youtube_url(url):
     return bool(re.match(r"^https?://(www\.)?(youtube\.com|youtu\.be|m\.youtube\.com)/", url))
-
-
 @app.route("/api/yt-scrape", methods=["GET"])
 def scrape():
     url = request.args.get("url", "")
-
     if not url:
         return jsonify({"error": "Parameter 'url' wajib diisi"}), 400
-
     if not is_youtube_url(url):
         return jsonify({"error": "URL harus link YouTube yang valid"}), 400
-
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
@@ -33,7 +25,6 @@ def scrape():
             }
         },
     }
-
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -82,7 +73,6 @@ def scrape():
                 "filesize": best_audio.get("filesize") or best_audio.get("filesize_approx"),
             } if best_audio else None),
         })
-
     except yt_dlp.utils.DownloadError as e:
         return jsonify({"error": "Gagal mengambil video. Cek link, atau videonya mungkin private/dibatasi wilayah.", "detail": str(e)}), 400
     except Exception as e:
