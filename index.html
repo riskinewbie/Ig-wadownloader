@@ -555,7 +555,7 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            opacity: 0.35;
+            opacity: 0.15;
             z-index: 0;
             pointer-events: none;
         }
@@ -1901,6 +1901,7 @@
         <button data-mode="foto" class="mode-btn active">1. Ambil Foto</button>
         <button data-mode="video" class="mode-btn">2. Ambil Video</button>
         <button id="waStatusBtn">📱 WA Status</button>
+        <button id="ytStatusBtn">▶️ YouTube</button>
         <button id="backToIg">3. Kembali ke IG</button>
         <button id="gameModeBtn" style="color:var(--accent);">🎮 Mode Game</button>
         <div class="theme-toggle">
@@ -1961,6 +1962,25 @@
         <p class="error" id="waErrorBox" style="display:none;"></p>
 
         <div class="results" id="waResults"></div>
+    </div>
+
+    <!-- YOUTUBE PANEL -->
+    <div class="wa-panel" id="ytPanel">
+        <h1>YouTube Downloader</h1>
+        <p class="sub">Tempel link video YouTube, pilih kualitas, lalu unduh.</p>
+
+        <div class="input-row">
+            <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" />
+            <button class="primary" id="ytGoBtn">
+                <span class="btn-text" id="ytBtnText">Ambil</span>
+                <span class="btn-spinner" id="ytBtnSpinner"></span>
+            </button>
+        </div>
+        <p class="hint">Hanya untuk video publik. Kualitas maksimal biasanya 720p (batasan dari YouTube untuk format gabungan video+audio).</p>
+
+        <p class="error" id="ytErrorBox" style="display:none;"></p>
+
+        <div class="results" id="ytResults"></div>
     </div>
 
     <!-- Toast container -->
@@ -2619,6 +2639,8 @@
 
         waStatusBtn.addEventListener('click', () => {
             const isShowingWa = waPanel.classList.contains('show');
+            ytPanel.classList.remove('show');
+            ytStatusBtn.classList.remove('active');
             if (isShowingWa) {
                 waPanel.classList.remove('show');
                 igWrap.style.display = '';
@@ -2752,628 +2774,93 @@
             });
         }
 
-        function updatePlaceholder() {
-            const isStory = lastLink && lastLink.includes('/stories/');
-            if (isStory) {
-                urlInput.placeholder = 'https://www.instagram.com/stories/...';
+        // ============================================================
+        //  10c. TAB YOUTUBE
+        // ============================================================
+        const ytPanel = document.getElementById('ytPanel');
+        const ytStatusBtn = document.getElementById('ytStatusBtn');
+        const ytUrlInput = document.getElementById('ytUrlInput');
+        const ytGoBtn = document.getElementById('ytGoBtn');
+        const ytBtnText = document.getElementById('ytBtnText');
+        const ytErrorBox = document.getElementById('ytErrorBox');
+        const ytResults = document.getElementById('ytResults');
+
+        ytStatusBtn.addEventListener('click', () => {
+            const isShowingYt = ytPanel.classList.contains('show');
+            // Tutup panel lain dulu biar nggak numpuk
+            waPanel.classList.remove('show');
+            waStatusBtn.classList.remove('active');
+            if (isShowingYt) {
+                ytPanel.classList.remove('show');
+                igWrap.style.display = '';
+                ytStatusBtn.classList.remove('active');
             } else {
-                urlInput.placeholder = currentMode === 'foto' ?
-                    'https://www.instagram.com/p/...' :
-                    'https://www.instagram.com/reel/...';
+                ytPanel.classList.add('show');
+                igWrap.style.display = 'none';
+                ytStatusBtn.classList.add('active');
             }
-        }
-
-        // ============================================================
-        //  11. THEME
-        // ============================================================
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            themeLabel.textContent = theme === 'hacker' ? t('themeHacker') : t('themeDark');
-            try { localStorage.setItem('ig-downriss-theme', theme); } catch (e) {}
-        }
-
-        themeSwitch.addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme') || 'dark';
-            applyTheme(current === 'hacker' ? 'dark' : 'hacker');
+            navMenu.classList.remove('open');
+            burgerBtn.classList.remove('open');
             if (soundEnabled) playSound('click');
         });
 
-        (function initTheme() {
-            let saved = 'dark';
-            try { saved = localStorage.getItem('ig-downriss-theme') || 'dark'; } catch (e) {}
-            applyTheme(saved);
-        })();
+        function ytFormatSeconds(sec) {
+            if (!sec) return '';
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
 
-        // ============================================================
-        //  12. KEYBOARD SHORTCUTS
-        // ============================================================
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.key === 'Enter') {
-                e.preventDefault();
-                fetchMedia();
+        async function ytFetch() {
+            const url = ytUrlInput.value.trim();
+            ytErrorBox.style.display = 'none';
+            ytResults.innerHTML = '';
+
+            if (!url) {
+                ytErrorBox.textContent = 'Masukkan link YouTube dulu.';
+                ytErrorBox.style.display = 'block';
                 return;
             }
-            if (e.ctrlKey && e.key === 'k') {
-                e.preventDefault();
-                urlInput.focus();
-                urlInput.select();
-                return;
-            }
-            if (e.key === 'Escape' && lightboxOverlay.classList.contains('open')) {
-                closeLightbox();
-                return;
-            }
-            if (lightboxOverlay.classList.contains('open')) {
-                if (e.key === 'ArrowLeft') {
-                    e.preventDefault();
-                    navigateLightbox(-1);
-                } else if (e.key === 'ArrowRight') {
-                    e.preventDefault();
-                    navigateLightbox(1);
-                }
-            }
-        });
 
-        // ============================================================
-        //  13. LIGHTBOX
-        // ============================================================
-        function openLightbox(items, index) {
-            if (!items || items.length === 0) return;
-            lightboxItems = items;
-            lightboxIndex = index;
-            renderLightbox();
-            lightboxOverlay.classList.add('open');
-            document.body.style.overflow = 'hidden';
-            if (soundEnabled) playSound('click');
-        }
+            ytGoBtn.disabled = true;
+            ytBtnText.textContent = 'Memproses...';
 
-        function closeLightbox() {
-            lightboxOverlay.classList.remove('open');
-            document.body.style.overflow = '';
-            const content = lightboxOverlay.querySelector('.lightbox-content');
-            if (content) content.remove();
-        }
-
-        function navigateLightbox(direction) {
-            const newIndex = (lightboxIndex + direction + lightboxItems.length) % lightboxItems.length;
-            if (newIndex !== lightboxIndex) {
-                lightboxIndex = newIndex;
-                renderLightbox();
-            }
-        }
-
-        function renderLightbox() {
-            const oldContent = lightboxOverlay.querySelector('.lightbox-content');
-            if (oldContent) oldContent.remove();
-
-            const item = lightboxItems[lightboxIndex];
-            if (!item) return;
-
-            let el;
-            if (item.type === 'video') {
-                el = document.createElement('video');
-                el.src = item.url;
-                el.controls = true;
-                el.autoplay = true;
-                el.className = 'lightbox-content';
-                el.style.maxWidth = '90%';
-                el.style.maxHeight = '90%';
-                el.style.borderRadius = '8px';
-            } else {
-                el = document.createElement('img');
-                el.src = item.url;
-                el.className = 'lightbox-content';
-                el.alt = 'Preview';
-                el.style.maxWidth = '90%';
-                el.style.maxHeight = '90%';
-                el.style.borderRadius = '8px';
-                el.style.objectFit = 'contain';
-            }
-
-            lightboxOverlay.appendChild(el);
-
-            if (lightboxItems.length > 1) {
-                lightboxCounter.textContent = `${lightboxIndex + 1} / ${lightboxItems.length}`;
-                lightboxCounter.style.display = 'block';
-            } else {
-                lightboxCounter.style.display = 'none';
-            }
-
-            lightboxPrev.style.display = lightboxItems.length > 1 ? 'block' : 'none';
-            lightboxNext.style.display = lightboxItems.length > 1 ? 'block' : 'none';
-        }
-
-        lightboxClose.addEventListener('click', closeLightbox);
-        lightboxOverlay.addEventListener('click', (e) => {
-            if (e.target === lightboxOverlay) closeLightbox();
-        });
-        lightboxPrev.addEventListener('click', (e) => { e.stopPropagation();
-            navigateLightbox(-1); });
-        lightboxNext.addEventListener('click', (e) => { e.stopPropagation();
-            navigateLightbox(1); });
-
-        // ============================================================
-        //  14. FETCH LOGIC
-        // ============================================================
-        goBtn.addEventListener('click', fetchMedia);
-        urlInput.addEventListener('keydown', e => { if (e.key === 'Enter') fetchMedia(); });
-
-        function setLoading(loading) {
-            goBtn.classList.toggle('loading', loading);
-            goBtn.disabled = loading;
-            urlInput.disabled = loading;
-            results.classList.toggle('loading', loading);
-            if (loading) {
-                results.innerHTML = '';
-                for (let i = 0; i < 2; i++) {
-                    const skeleton = document.createElement('div');
-                    skeleton.className = 'skeleton-card';
-                    skeleton.innerHTML = `
-                        <div class="skeleton-img"></div>
-                        <div class="skeleton-body">
-                            <div class="skeleton-text"></div>
-                            <div class="skeleton-btn"></div>
-                        </div>
-                    `;
-                    results.appendChild(skeleton);
-                }
-                status.classList.remove('show');
-                if (soundEnabled) playSound('click');
-            } else {
-                results.classList.remove('loading');
-                document.querySelectorAll('.skeleton-card').forEach(el => el.remove());
-            }
-        }
-
-        function showError(msg) {
-            errorBox.textContent = msg;
-            errorBox.classList.add('show');
-            if (soundEnabled) playSound('error');
-        }
-
-        function clearError() {
-            errorBox.classList.remove('show');
-            errorBox.textContent = '';
-        }
-
-        async function fetchFileSize(url) {
             try {
-                const res = await fetch(url, { method: 'HEAD' });
-                if (res.ok) {
-                    const size = res.headers.get('content-length');
-                    if (size) return parseInt(size, 10);
-                }
-            } catch (_) {}
-            return null;
-        }
-
-        async function normalizeItemWithSize(item) {
-            let result = {
-                url: null,
-                type: 'image',
-                thumb: null,
-                width: null,
-                height: null,
-                fileSize: null,
-                duration: null,
-                isStory: false
-            };
-            if (typeof item === 'string') {
-                result.url = item;
-                result.type = guessType(item);
-                const size = await fetchFileSize(item);
-                if (size) result.fileSize = size;
-                return result;
-            }
-            const isStory = item.is_story === true || item.story === true ||
-                (item.type && item.type === 'story') ||
-                (item.media_type && item.media_type === 'story');
-            const url = item.media || item.video_url || item.download_url || item.url || item.image_url ||
-                item.thumbnail_url || item.media_url || item.link;
-            if (!url) return null;
-            result.url = url;
-            result.type = item.type || guessType(url);
-            result.thumb = item.thumb || item.thumbnail_url || item.thumbnail || item.image_url || (result.type === 'image' ?
-                url : null);
-            result.width = item.width || item.dimensions?.width || null;
-            result.height = item.height || item.dimensions?.height || null;
-            result.duration = item.duration || item.video_duration || null;
-            result.isStory = isStory || url.includes('/stories/') || (lastLink && lastLink.includes('/stories/'));
-            if (!result.fileSize) {
-                const size = await fetchFileSize(url);
-                if (size) result.fileSize = size;
-            } else if (typeof result.fileSize === 'string') {
-                result.fileSize = parseInt(result.fileSize, 10) || null;
-            }
-            return result;
-        }
-
-        function guessType(url) {
-            if (/\.mp4($|\?)/i.test(url) || /\/video\//i.test(url) || /\.mov($|\?)/i.test(url)) {
-                return 'video';
-            }
-            return 'image';
-        }
-
-        function detectLinkType(link) {
-            if (link.includes('/stories/')) return 'story';
-            if (link.includes('/reel/')) return 'reel';
-            if (link.includes('/p/')) return 'post';
-            if (link.includes('/tv/')) return 'igtv';
-            return 'unknown';
-        }
-
-        async function fetchMedia() {
-            const link = urlInput.value.trim();
-            clearError();
-            if (!link) { showError(t('errorEmpty')); return; }
-            if (!/instagram\.com/i.test(link)) { showError(t('errorNotIG')); return; }
-            lastLink = link;
-            const linkType = detectLinkType(link);
-            if (linkType === 'story') {
-                urlInput.placeholder = 'https://www.instagram.com/stories/...';
-            }
-            setLoading(true);
-            try {
-                const endpoint = `${PROXY_ENDPOINT}?url=${encodeURIComponent(link)}`;
-                const res = await fetch(endpoint, { method: 'GET' });
-                if (!res.ok) {
-                    throw new Error(t('errorServer', { status: res.status }));
-                }
+                const res = await fetch(`/api/yt-scrape?url=${encodeURIComponent(url)}`);
                 const data = await res.json();
-                lastCaption = data?.caption || data?.title || data?.description || '';
-                const candidates = [
-                    data?.data, data?.medias, data?.media, data?.result, data?.results,
-                    data?.items, data?.slides, data?.carousel
-                ].filter(Boolean);
-                let rawList = candidates.find(c => Array.isArray(c)) || [];
-                if (!rawList.length && Array.isArray(data)) rawList = data;
-                if (!rawList.length && (data?.media || data?.video_url || data?.image_url || data?.download_url || data
-                        ?.url)) {
-                    rawList = [data];
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Gagal mengambil video.');
                 }
-                if (!rawList.length) {
-                    showError(t('errorNoMedia'));
-                    const raw = document.createElement('pre');
-                    raw.className = 'raw';
-                    raw.textContent = JSON.stringify(data, null, 2);
-                    results.appendChild(raw);
-                    setLoading(false);
-                    return;
-                }
-                const normalizedList = [];
-                for (const item of rawList) {
-                    const normalized = await normalizeItemWithSize(item);
-                    if (normalized) {
-                        if (linkType === 'story') {
-                            normalized.isStory = true;
-                        }
-                        normalizedList.push(normalized);
-                    }
-                }
-                if (normalizedList.length === 0) {
-                    showError(t('errorNoMedia'));
-                    setLoading(false);
-                    return;
-                }
-                lastFullList = normalizedList;
-                if (lastLink) {
-                    addHistory(lastLink, lastCaption, normalizedList.length);
-                }
-                renderFilteredResults(normalizedList, lastCaption);
+
+                renderYtResult(data);
+                if (soundEnabled) playSound('success');
             } catch (err) {
-                showError(err.message || t('errorGeneric'));
-                results.innerHTML = '';
+                ytErrorBox.textContent = err.message || 'Terjadi kesalahan.';
+                ytErrorBox.style.display = 'block';
             } finally {
-                setLoading(false);
+                ytGoBtn.disabled = false;
+                ytBtnText.textContent = 'Ambil';
             }
         }
 
-        // ============================================================
-        //  15. FILTER & RENDER
-        // ============================================================
-        function renderFilteredResults(list, caption) {
-            const targetType = currentMode === 'foto' ? 'image' : 'video';
-            const filtered = list.filter(item => item.type === targetType);
-            if (filtered.length === 0) {
-                results.innerHTML = '';
-                const msg = document.createElement('div');
-                msg.style.cssText = `
-                    padding: 20px 16px;
-                    background: var(--panel);
-                    border: 1px solid var(--border);
-                    border-radius: var(--radius);
-                    color: var(--muted);
-                    text-align: center;
-                    font-size: 14px;
-                    animation: fadeUp 0.4s var(--ease-out) both;
-                `;
-                const typeLabel = currentMode === 'foto' ? t('foto') : t('video');
-                const isStory = list.some(item => item.isStory);
-                const storyText = isStory ? ` (${t('story')})` : '';
-                msg.textContent = t('noMedia', { type: typeLabel }) + storyText;
-                results.appendChild(msg);
-                return;
-            }
-            renderResults(filtered, caption);
-        }
+        function renderYtResult(data) {
+            const card = document.createElement('div');
+            card.className = 'card';
 
-        // ============================================================
-        //  16. DOWNLOAD
-        // ============================================================
-        function getExtensionFromUrl(url, defaultExt) {
-            try {
-                const urlObj = new URL(url);
-                const path = urlObj.pathname;
-                const match = path.match(/\.([^./]+)$/);
-                if (match) return match[1];
-            } catch (_) { return defaultExt; }
-        }
-
-        function getTimestamp() {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            const h = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            return `${y}${m}${d}_${h}${min}${s}`;
-        }
-
-        async function downloadFile(url, filename) {
-            const btn = document.querySelector(`[data-dl-url="${url}"]`);
-            if (btn) { btn.classList.add('downloading');
-                btn.disabled = true; }
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Gagal mengunduh (${response.status})`);
-                const blob = await response.blob();
-                let ext = getExtensionFromUrl(url, 'bin');
-                if (ext === 'bin') {
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('video')) ext = 'mp4';
-                    else if (contentType.includes('image')) ext = 'jpg';
-                    else if (contentType.includes('webp')) ext = 'webp';
-                    else if (contentType.includes('png')) ext = 'png';
-                    else if (contentType.includes('gif')) ext = 'gif';
-                }
-                const ts = getTimestamp();
-                const fullName = `IG DOWNRISS_${ts}.${ext}`;
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = fullName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-                showToast(t('downloadSuccess', { filename: fullName }), 'success', 3000);
-            } catch (err) {
-                console.error('Download error:', err);
-                showToast(t('downloadFailed', { error: err.message }), 'error', 4000);
-            } finally {
-                if (btn) { btn.classList.remove('downloading');
-                    btn.disabled = false; }
-            }
-        }
-
-        // ============================================================
-        //  17. FORMAT HELPERS
-        // ============================================================
-        function formatFileSize(bytes) {
-            if (!bytes || isNaN(bytes)) return null;
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1048576).toFixed(1) + ' MB';
-        }
-
-        function formatDuration(seconds) {
-            if (!seconds) return null;
-            const secs = Math.floor(seconds);
-            const mins = Math.floor(secs / 60);
-            const remainingSecs = secs % 60;
-            if (mins > 0) return `${mins}m ${remainingSecs}s`;
-            return `${secs}s`;
-        }
-
-        // ============================================================
-        //  18. RENDER RESULTS
-        // ============================================================
-        function renderResults(list, caption) {
-            results.innerHTML = '';
-            const lightboxData = list.map(item => ({
-                url: item.url,
-                type: item.type,
-                thumb: item.thumb
-            }));
-
-            list.forEach((item, i) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
+            if (data.thumbnail) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'media-wrapper';
-                wrapper.style.cursor = 'pointer';
-
-                let mediaEl;
-                if (item.type === 'video') {
-                    const thumbImg = document.createElement('img');
-                    thumbImg.src = item.thumb || item.url;
-                    thumbImg.style.width = '100%';
-                    thumbImg.style.display = 'block';
-                    thumbImg.style.maxHeight = '420px';
-                    thumbImg.style.objectFit = 'cover';
-                    wrapper.appendChild(thumbImg);
-                    wrapper.dataset.url = item.url;
-                    wrapper.dataset.type = 'video';
-                } else {
-                    mediaEl = document.createElement('img');
-                    mediaEl.src = item.thumb || item.url;
-                    mediaEl.loading = 'lazy';
-                    wrapper.appendChild(mediaEl);
-                    wrapper.dataset.url = item.url;
-                    wrapper.dataset.type = 'image';
-                }
-
-                const zoomInd = document.createElement('div');
-                zoomInd.className = 'zoom-indicator';
-                zoomInd.textContent = t('zoom');
-                wrapper.appendChild(zoomInd);
-
-                wrapper.addEventListener('click', () => {
-                    openLightbox(lightboxData, i);
-                });
-
+                const img = document.createElement('img');
+                img.src = data.thumbnail;
+                wrapper.appendChild(img);
                 card.appendChild(wrapper);
+            }
 
-                if (item.isStory) {
-                    const storyBadge = document.createElement('div');
-                    storyBadge.style.cssText = `
-                        position: absolute;
-                        top: 10px;
-                        left: 10px;
-                        background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-                        color: #fff;
-                        font-size: 10px;
-                        font-weight: 700;
-                        padding: 3px 10px;
-                        border-radius: 20px;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                        backdrop-filter: blur(4px);
-                        z-index: 2;
-                    `;
-                    storyBadge.textContent = `📸 ${t('story')}`;
-                    wrapper.appendChild(storyBadge);
-                }
-
-                const infoDiv = document.createElement('div');
-                infoDiv.className = 'media-info';
-                let infoHtml = '';
-                if (item.width && item.height) {
-                    infoHtml +=
-                        `<span><span class="label">${t('resolusi')}</span> <span class="value">${item.width}×${item.height}</span></span>`;
-                } else {
-                    infoHtml += `<span><span class="label">${t('resolusi')}</span> <span class="value">${t('infoNotAvailable')}</span></span>`;
-                }
-                const sizeStr = formatFileSize(item.fileSize);
-                if (sizeStr) {
-                    infoHtml += `<span><span class="label">${t('ukuran')}</span> <span class="value">${sizeStr}</span></span>`;
-                } else {
-                    infoHtml += `<span><span class="label">${t('ukuran')}</span> <span class="value">${t('infoNotAvailable')}</span></span>`;
-                }
-                if (item.type === 'video' && item.duration) {
-                    const durStr = formatDuration(item.duration);
-                    if (durStr) {
-                        infoHtml += `<span><span class="label">${t('durasi')}</span> <span class="value">${durStr}</span></span>`;
-                    }
-                }
-                const typeLabel = item.type === 'video' ? t('video') : t('foto');
-                infoHtml += `<span><span class="label">${t('tipe')}</span> <span class="value">${typeLabel}</span></span>`;
-                if (item.isStory) {
-                    infoHtml += `<span><span class="label">📌</span> <span class="value" style="color:var(--accent);">${t('story')}</span></span>`;
-                }
-                infoDiv.innerHTML = infoHtml;
-                card.appendChild(infoDiv);
-
-                const body = document.createElement('div');
-                body.className = 'card-body';
-
-                const leftGroup = document.createElement('div');
-                leftGroup.className = 'left-group';
-                const label = document.createElement('span');
-                label.className = 'card-label';
-                label.textContent = list.length > 1 ? `${t('media')} ${i+1}` : t('media');
-
-                const openIg = document.createElement('button');
-                openIg.className = 'open-ig-btn';
-                openIg.innerHTML = t('bukaIg');
-                openIg.title = 'Buka postingan asli di Instagram';
-                openIg.addEventListener('click', () => {
-                    if (lastLink) window.open(lastLink, '_blank', 'noopener');
-                });
-
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.innerHTML = t('copyLink');
-                copyBtn.title = 'Salin link media ke clipboard';
-                copyBtn.addEventListener('click', async () => {
-                    try {
-                        await navigator.clipboard.writeText(item.url);
-                        copyBtn.innerHTML = t('copied');
-                        copyBtn.classList.add('copied');
-                        setTimeout(() => {
-                            copyBtn.innerHTML = t('copyLink');
-                            copyBtn.classList.remove('copied');
-                        }, 2000);
-                        if (soundEnabled) playSound('success');
-                    } catch (_) {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = item.url;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        copyBtn.innerHTML = t('copied');
-                        copyBtn.classList.add('copied');
-                        setTimeout(() => {
-                            copyBtn.innerHTML = t('copyLink');
-                            copyBtn.classList.remove('copied');
-                        }, 2000);
-                    }
-                });
-
-                leftGroup.appendChild(label);
-                leftGroup.appendChild(openIg);
-                leftGroup.appendChild(copyBtn);
-                body.appendChild(leftGroup);
-
-                const rightGroup = document.createElement('div');
-                rightGroup.className = 'right-group';
-
-                const dlBtn = document.createElement('button');
-                dlBtn.className = 'dl-btn';
-                dlBtn.dataset.dlUrl = item.url;
-                dlBtn.innerHTML = `
-                    <span class="dl-spinner"></span>
-                    <span class="dl-text">${t('unduh')}</span>
-                `;
-                dlBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    downloadFile(item.url, 'IG DOWNRISS');
-                });
-
-                rightGroup.appendChild(dlBtn);
-                body.appendChild(rightGroup);
-                card.appendChild(body);
-
-                if (caption && i === 0) {
-                    const cap = document.createElement('div');
-                    cap.className = 'caption';
-                    cap.textContent = caption;
-                    card.appendChild(cap);
-                }
-
-                results.appendChild(card);
-            });
-        }
-
-        // ============================================================
-        //  19. INIT
-        // ============================================================
-        updateUIStrings();
-        updatePlaceholder();
-
-        console.log('🚀 IG Downriss siap!');
-        console.log('🎮 Mode Game: ' + (gameMode ? 'ON' : 'OFF'));
-        console.log('🔊 Suara: ' + (soundEnabled ? 'ON' : 'OFF') + ' | Volume: ' + volumeLevel + '%');
-        console.log('🌐 Bahasa: ' + currentLang.toUpperCase());
-        console.log('🖼️ Lightbox: Klik thumbnail untuk preview fullscreen');
-        console.log('⌨️ Shortcuts: Ctrl+Enter fetch, Ctrl+K fokus, Esc tutup');
-        console.log('💾 History: Ekspor/Impor riwayat tersedia');
-        console.log('🔊 Volume slider di navbar untuk mengatur keras suara');
-    </script>
-</body>
-</html>
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'media-info';
+            infoDiv.innerHTML = `
+                <span><span class="label">Judul</span> <span class="value">${(data.title || '-').slice(0, 60)}</span></span>
+                <span><span class="label">Durasi</span> <span class="value">${ytFormatSeconds(data.duration)}</span></span>
+            `;
+            card
